@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Search</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .hotel-container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .hotel-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
+        }
+
+        .hotel-name {
+            font-size: 24px;
+            color: #0077cc;
+            margin-bottom: 10px;
+        }
+
+        .hotel-info {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .price {
+            font-size: 20px;
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Available Hotels</h1>
+
+<div class="hotel-container">
+
+    {% if hotels %}
+
+        {% for hotel in hotels %}
+
+        <div class="hotel-card">
+
+            <div class="hotel-name">
+                {{ hotel.name }}
+            </div>
+
+            <div class="hotel-info">
+                Code: {{ hotel.code }}
+            </div>
+
+            <div class="hotel-info">
+                Category: {{ hotel.categoryName }}
+            </div>
+
+            <div class="hotel-info">
+                Destination: {{ hotel.destinationName }}
+            </div>
+
+            <div class="hotel-info">
+                Currency: {{ hotel.currency }}
+            </div>
+
+            <div class="price">
+                From {{ hotel.minRate }} {{ hotel.currency }}
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p>No hotels found.</p>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>
