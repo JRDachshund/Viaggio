@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hotel Selection</title>
+</head>
+<body>
+
+<h1>Hotel Selection</h1>
+
+{% for hotel in hotels %}
+
+<div
+    id="hotel-{{ hotel.code }}"
+    style="margin-bottom:50px">
+
+    <h2>{{ hotel.name }}</h2>
+
+    <p>
+        {{ hotel.city }},
+        {{ hotel.country }}
+    </p>
+
+    <p>{{ hotel.description }}</p>
+
+    {% if hotel.images %}
+        <img
+            src="http://photos.hotelbeds.com/giata/{{ hotel.images[0]['path'] }}"
+            width="350">
+    {% endif %}
+
+    <h4>Gallery</h4>
+
+    {% for image in hotel.images[:5] %}
+        <img
+            src="http://photos.hotelbeds.com/giata/{{ image['path'] }}"
+            width="200">
+    {% endfor %}
+
+    <h4>Facilities</h4>
+
+    <ul>
+    {% for facility in hotel.facilities[:10] %}
+        <li>{{ facility["facilityCode"] }}</li>
+    {% endfor %}
+    </ul>
+
+    <button onclick="saveHotel('{{ hotel.code }}')">
+        Yes
+    </button>
+
+    <button onclick="rejectHotel('{{ hotel.code }}')">
+        No
+    </button>
+
+
+    <script type="application/json" id="data-{{ hotel.code }}">
+    {
+        "code": "{{ hotel.code }}",
+        "name": {{ hotel.name|tojson }},
+        "description": {{ hotel.description|tojson }},
+        "city": {{ hotel.city|tojson }},
+        "country": {{ hotel.country|tojson }},
+        "latitude": "{{ hotel.latitude }}",
+        "longitude": "{{ hotel.longitude }}",
+        "image": "http://photos.hotelbeds.com/giata/{{ hotel.images[0]['path'] }}"
+    }
+    </script>
+
+</div>
+
+{% endfor %}
+
+<hr>
+
+<form action="/tripSummary">
+    <button type="submit">
+        Finish Selection
+    </button>
+</form>
+
+
+<script>
+
+async function saveHotel(code) {
+
+    const hotelData =
+        JSON.parse(
+            document.getElementById(
+                "data-" + code
+            ).textContent
+        );
+
+    await fetch("/saveHotel", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(hotelData)
+    });
+
+    document.getElementById(
+        "hotel-" + code
+    ).remove();
+}
+
+
+
+async function rejectHotel(code) {
+
+    await fetch("/rejectHotel", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            code: code
+        })
+    });
+
+    document.getElementById(
+        "hotel-" + code
+    ).remove();
+}
+
+</script>
+
+</body>
+</html>

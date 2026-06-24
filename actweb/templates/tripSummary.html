@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trip Summary</title>
+</head>
+<body>
+
+<h1>Selected Hotels</h1>
+
+{% if selected_hotels %}
+
+    {% for city, hotels in selected_hotels.items() %}
+
+        <h2>{{ city }}</h2>
+
+        {% for hotel in hotels %}
+
+        <div style="margin-bottom:40px">
+
+            <h3>{{ hotel.name }}</h3>
+
+            <p>{{ hotel.country }}</p>
+
+            <p>{{ hotel.description }}</p>
+
+            <img
+                src="{{ hotel.image }}"
+                width="300">
+
+        </div>
+
+        {% endfor %}
+
+    {% endfor %}
+
+{% else %}
+
+<h2>No hotels selected.</h2>
+
+{% endif %}
+
+</body>
+</html>

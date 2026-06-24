@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hotels</title>
+</head>
+<body>
+
+{% for hotel in hotels %}
+
+    <div style="margin-bottom:50px">
+
+        <h2>{{ hotel.name }}</h2>
+
+        <p>
+            {{ hotel.city }},
+            {{ hotel.country }}
+        </p>
+
+        <p>{{ hotel.description }}</p>
+
+        <!-- First image -->
+        {% if hotel.images %}
+            <img
+                src="http://photos.hotelbeds.com/giata/{{ hotel.images[0]['path'] }}"
+                width="350">
+        {% endif %}
+
+        <h4>Gallery</h4>
+
+        {% for image in hotel.images[:5] %}
+            <img
+                src="http://photos.hotelbeds.com/giata/{{ image['path'] }}"
+                width="200">
+        {% endfor %}
+
+        <h4>Facilities</h4>
+
+        <ul>
+        {% for facility in hotel.facilities[:10] %}
+            <li>
+                {{ facility['facilityCode'] }}
+            </li>
+        {% endfor %}
+        </ul>
+
+    </div>
+
+{% endfor %}
+
+</body>
+</html>
