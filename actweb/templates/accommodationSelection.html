@@ -25,6 +25,16 @@
 
 <h1>Hotel Selection</h1>
 
+{% if error %}
+<div style="background:#fee2e2; color:#b91c1c; padding:16px; border-radius:8px; margin-bottom:20px; border:1px solid #fecaca;">
+    <strong>Error:</strong> {{ error }}
+</div>
+{% endif %}
+
+{% if not hotels and not error %}
+<p>No hotels available right now for the selected cities (or all were already reviewed).</p>
+{% endif %}
+
 {% for hotel in hotels %}
 
 <div
@@ -40,17 +50,19 @@
 
     <p>{{ hotel.description }}</p>
 
-    {% if hotel.images %}
+    {% set first_img = hotel.images[0]['path'] if hotel.images else '' %}
+    {% if first_img %}
         <img
-            src="http://photos.hotelbeds.com/giata/{{ hotel.images[0]['path'] }}"
+            src="{% if first_img.startswith('http') %}{{ first_img }}{% else %}http://photos.hotelbeds.com/giata/{{ first_img }}{% endif %}"
             width="350">
     {% endif %}
 
     <h4>Gallery</h4>
 
     {% for image in hotel.images[:5] %}
+        {% set img_path = image['path'] %}
         <img
-            src="http://photos.hotelbeds.com/giata/{{ image['path'] }}"
+            src="{% if img_path.startswith('http') %}{{ img_path }}{% else %}http://photos.hotelbeds.com/giata/{{ img_path }}{% endif %}"
             width="200">
     {% endfor %}
 
@@ -71,6 +83,10 @@
     </button>
 
 
+    {% set img_for_js = hotel.images[0]['path'] if hotel.images else '' %}
+    {% if not img_for_js.startswith('http') %}
+        {% set img_for_js = 'http://photos.hotelbeds.com/giata/' ~ img_for_js %}
+    {% endif %}
     <script type="application/json" id="data-{{ hotel.code }}">
     {
         "code": "{{ hotel.code }}",
@@ -80,7 +96,7 @@
         "country": {{ hotel.country|tojson }},
         "latitude": "{{ hotel.latitude }}",
         "longitude": "{{ hotel.longitude }}",
-        "image": "http://photos.hotelbeds.com/giata/{{ hotel.images[0]['path'] }}"
+        "image": "{{ img_for_js }}"
     }
     </script>
 
