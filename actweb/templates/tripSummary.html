@@ -1,9 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Trip Summary</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Summary • Viaggio</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f8fafc;
+        margin: 0;
+        color: #1e293b;
+      }
+      .page-content {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 24px 60px;
+      }
+    </style>
 </head>
 <body>
+  {% include 'nav.html' %}
+
+<div class="page-content">
 
 <h1>Selected Hotels</h1>
 
@@ -39,5 +57,6 @@
 
 {% endif %}
 
+</div>
 </body>
 </html>
