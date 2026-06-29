@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, session
+from flask import Blueprint, render_template, request, session, redirect
 import hashlib
 import time
 import requests
+import random
 
 views = Blueprint("views", __name__)
 
@@ -100,36 +101,78 @@ def home():
     if not selected_cities:
         return render_template(
             "accommodationSelection.html",
-            hotels=[]
+            hotels=[],
+            error=None
         )
 
-    all_hotels = []
+    if USE_FAKE_HOTEL_DATA:
+        # Use reliable fake data instead of the rate-limited Hotelbeds test API
+        all_hotels = []
+        for city in selected_cities:
+            all_hotels.extend(generate_fake_hotels(city))
 
-    # Search hotels for every selected city
-    for city in selected_cities:
+        # Remove duplicates by code
+        unique_hotels = {}
+        for hotel in all_hotels:
+            unique_hotels[hotel["code"]] = hotel
+        hotels = list(unique_hotels.values())
+    else:
+        # Original real API path (kept for reference, currently disabled)
+        hotel_search_cache = session.get("hotel_search_cache", {})
+        all_hotels = []
 
-        search_data = search_hotels(city["code"])
+        for city in selected_cities:
+            city_code = city["code"]
+            if city_code not in hotel_search_cache:
+                try:
+                    search_data = search_hotels(city_code)
+                    hotel_search_cache[city_code] = search_data
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 429:
+                        return render_template(
+                            "accommodationSelection.html",
+                            hotels=[],
+                            error="Rate limit reached from Hotelbeds test API (429 Too Many Requests). "
+                                  "Please wait a minute or select fewer cities."
+                        )
+                    raise
+            search_data = hotel_search_cache[city_code]
+            all_hotels.extend(search_data["hotels"]["hotels"])
 
-        hotels = search_data["hotels"]["hotels"]
+        session["hotel_search_cache"] = hotel_search_cache
 
-        all_hotels.extend(hotels)
-
-    # Remove duplicates
-    unique_hotels = {}
-    for hotel in all_hotels:
-        unique_hotels[hotel["code"]] = hotel
-
-    hotels = list(unique_hotels.values())
+        unique_hotels = {}
+        for hotel in all_hotels:
+            unique_hotels[hotel["code"]] = hotel
+        hotels = list(unique_hotels.values())
 
     hotel_codes = [hotel["code"] for hotel in hotels]
 
-    content_hotels = get_hotels_content(hotel_codes)
+    # For fake data we skip the expensive content API
+    if USE_FAKE_HOTEL_DATA:
+        content_hotels = {h["code"]: h for h in hotels}
+    else:
+        content_cache = session.get("content_cache", {})
+        missing_codes = [code for code in hotel_codes if code not in content_cache]
+        if missing_codes:
+            try:
+                new_content = get_hotels_content(missing_codes)
+                content_cache.update(new_content)
+                session["content_cache"] = content_cache
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 429:
+                    return render_template(
+                        "accommodationSelection.html",
+                        hotels=[],
+                        error="Rate limit from Hotelbeds content API."
+                    )
+                raise
+        content_hotels = content_cache
 
     selected_hotels = session.get("selected_hotels", {})
     rejected_hotels = session.get("rejected_hotels", [])
 
     selected_codes = []
-
     for city_hotels in selected_hotels.values():
         for hotel in city_hotels:
             selected_codes.append(str(hotel["code"]))
@@ -137,37 +180,51 @@ def home():
     enriched_hotels = []
 
     for hotel in hotels:
-
         code = hotel["code"]
 
         if str(code) in selected_codes:
             continue
-
         if str(code) in rejected_hotels:
             continue
 
-        content = content_hotels.get(code, {})
+        if USE_FAKE_HOTEL_DATA:
+            # Fake data is already in the final flat format
+            images = hotel.get("images", [])
+            if not images:
+                continue
+            enriched_hotels.append({
+                "code": str(code),
+                "name": hotel.get("name", ""),
+                "description": hotel.get("description", ""),
+                "city": hotel.get("city", ""),
+                "country": hotel.get("country", "Demo"),
+                "latitude": hotel.get("latitude"),
+                "longitude": hotel.get("longitude"),
+                "images": images,
+                "facilities": hotel.get("facilities", [])
+            })
+        else:
+            content = content_hotels.get(code, {})
+            images = content.get("images", [])
+            if not images:
+                continue
 
-        images = content.get("images", [])
-
-        if not images:
-            continue
-
-        enriched_hotels.append({
-            "code": str(code),
-            "name": content.get("name", hotel.get("name")),
-            "description": content.get("description", {}).get("content", ""),
-            "city": content.get("city", {}).get("content"),
-            "country": content.get("country", {}).get("description", {}).get("content"),
-            "latitude": content.get("coordinates", {}).get("latitude"),
-            "longitude": content.get("coordinates", {}).get("longitude"),
-            "images": images,
-            "facilities": content.get("facilities", [])
-        })
+            enriched_hotels.append({
+                "code": str(code),
+                "name": content.get("name", hotel.get("name")),
+                "description": content.get("description", {}).get("content", ""),
+                "city": content.get("city", {}).get("content", hotel.get("city", "")),
+                "country": content.get("country", {}).get("description", {}).get("content", hotel.get("country", "Demo")),
+                "latitude": content.get("latitude") or content.get("coordinates", {}).get("latitude"),
+                "longitude": content.get("longitude") or content.get("coordinates", {}).get("longitude"),
+                "images": images,
+                "facilities": content.get("facilities", [])
+            })
 
     return render_template(
         "accommodationSelection.html",
-        hotels=enriched_hotels
+        hotels=enriched_hotels,
+        error=None
     )
 
 
@@ -531,6 +588,155 @@ CITY_LIBRARY = {
     ],
 }
 
+# Switch to fake demo data for hotels (the real Hotelbeds test API has very strict rate limits)
+USE_FAKE_HOTEL_DATA = True
+
+
+def generate_fake_hotels(city):
+    """Return fake but realistic hotel data for a given city."""
+    city_name = city.get("name", "Demo City")
+    random.seed(hash(city_name))  # same hotels every time for the same city
+
+    templates = [
+        {
+            "name": f"Grand {city_name} Palace",
+            "description": f"Luxury 5-star hotel in the heart of {city_name} with elegant rooms and excellent dining.",
+            "facilities": [1, 2, 5, 12, 23, 45],
+            "image_ids": [1015, 1016, 102, 103]
+        },
+        {
+            "name": f"{city_name} Boutique Hotel",
+            "description": f"Stylish boutique hotel with great service and a central location in {city_name}.",
+            "facilities": [3, 8, 15, 30, 52],
+            "image_ids": [104, 106, 107]
+        },
+        {
+            "name": f"Sea View {city_name} Resort",
+            "description": f"Beautiful resort with pool, spa and views near {city_name}. Perfect for relaxation.",
+            "facilities": [1, 4, 9, 18, 25],
+            "image_ids": [109, 110, 111]
+        },
+        {
+            "name": f"Urban {city_name} Inn",
+            "description": f"Modern, affordable hotel with free WiFi and comfortable rooms in {city_name}.",
+            "facilities": [2, 6, 12, 20],
+            "image_ids": [113, 114, 115]
+        },
+        {
+            "name": f"Royal {city_name} Suites",
+            "description": f"Exclusive luxury suites with premium service and amenities in the best part of {city_name}.",
+            "facilities": [1, 5, 12, 23, 45, 67],
+            "image_ids": [117, 118, 119]
+        },
+    ]
+
+    hotels = []
+    for i, t in enumerate(templates):
+        code = 100000 + (abs(hash(city_name)) % 800000) + i
+        lat = 30 + (abs(hash(city_name + str(i))) % 20)
+        lon = -20 + (abs(hash(city_name + str(i))) % 40)
+
+        images = [{"path": f"https://picsum.photos/id/{img_id}/400/300"} for img_id in t["image_ids"]]
+
+        hotels.append({
+            "code": str(code),
+            "name": t["name"],
+            "description": t["description"],
+            "city": city_name,
+            "country": "Demo Region",
+            "latitude": round(lat + random.uniform(-0.3, 0.3), 4),
+            "longitude": round(lon + random.uniform(-0.5, 0.5), 4),
+            "images": images,
+            "facilities": [{"facilityCode": f} for f in t["facilities"]],
+        })
+
+    return hotels[:4]
+
+
+CITY_COORDS = {
+    "BCN": [41.3851, 2.1734],
+    "MAD": [40.4168, -3.7038],
+    "PMI": [39.5696, 2.6502],
+    "LIS": [38.7223, -9.1393],
+    "OPO": [41.1496, -8.6110],
+    "PAR": [48.8566, 2.3522],
+    "NCE": [43.7102, 7.2620],
+    "LYS": [45.7640, 4.8357],
+    "LON": [51.5074, -0.1278],
+    "EDI": [55.9533, -3.1883],
+    "DUB": [53.3498, -6.2603],
+    "BRU": [50.8503, 4.3517],
+    "AMS": [52.3676, 4.9041],
+    "BER": [52.5200, 13.4050],
+    "MUC": [48.1351, 11.5820],
+    "FRA": [50.1109, 8.6821],
+    "ZRH": [47.3769, 8.5417],
+    "GVA": [46.2044, 6.1432],
+    "VIE": [48.2082, 16.3738],
+    "ROM": [41.9028, 12.4964],
+    "MIL": [45.4642, 9.1900],
+    "VCE": [45.4408, 12.3155],
+    "ATH": [37.9839, 23.7275],
+    "JTR": [36.3932, 25.4615],
+    "IST": [41.0082, 28.9784],
+    "AYT": [36.8969, 30.7133],
+    "CPH": [55.6761, 12.5683],
+    "STO": [59.3293, 18.0686],
+    "OSL": [59.9139, 10.7522],
+    "HEL": [60.1699, 24.9384],
+    "WAW": [52.2297, 21.0122],
+    "KRK": [50.0647, 19.9450],
+    "PRG": [50.0755, 14.4378],
+    "BTS": [48.1459, 17.1077],
+    "BUD": [47.4979, 19.0402],
+    "BUH": [44.4268, 26.1025],
+    "DBV": [42.6507, 18.0944],
+    "SPU": [43.5081, 16.4402],
+    "LJU": [46.0569, 14.5058],
+    "RAK": [31.6295, -7.9811],
+    "CAS": [33.5731, -7.5898],
+    "TUN": [36.8065, 10.1815],
+    "CAI": [30.0444, 31.2357],
+    "HRG": [27.2579, 33.8116],
+    "DXB": [25.2048, 55.2708],
+    "AUH": [24.4539, 54.3773],
+    "DOH": [25.2854, 51.5310],
+    "RUH": [24.7136, 46.6753],
+    "JED": [21.5433, 39.1728],
+    "AMM": [31.9454, 35.9284],
+    "BKK": [13.7563, 100.5018],
+    "HKT": [7.8804, 98.3923],
+    "SGN": [10.8231, 106.6297],
+    "HAN": [21.0278, 105.8342],
+    "PNH": [11.5564, 104.9282],
+    "KUL": [3.1390, 101.6869],
+    "SIN": [1.3521, 103.8198],
+    "DPS": [-8.4095, 115.1889],
+    "JKT": [-6.2088, 106.8456],
+    "TYO": [35.6762, 139.6503],
+    "OSA": [34.6937, 135.5023],
+    "UKY": [35.0116, 135.7681],
+    "SEL": [37.5665, 126.9780],
+    "BJS": [39.9042, 116.4074],
+    "SHA": [31.2304, 121.4737],
+    "HKG": [22.3193, 114.1694],
+    "NYC": [40.7128, -74.0060],
+    "LAX": [34.0522, -118.2437],
+    "MIA": [25.7617, -80.1918],
+    "YTO": [43.6532, -79.3832],
+    "YVR": [49.2827, -123.1207],
+    "CUN": [21.1619, -86.8515],
+    "MEX": [19.4326, -99.1332],
+    "HAV": [23.1136, -82.3666],
+    "PUJ": [18.5820, -68.4043],
+    "RIO": [-22.9068, -43.1729],
+    "SAO": [-23.5505, -46.6333],
+    "BUE": [-34.6037, -58.3816],
+    "SCL": [-33.4489, -70.6693],
+    "LIM": [-12.0464, -77.0428],
+    "CUZ": [-13.5319, -71.9675],
+}
+
 @views.route("/citySelection")
 def citySelection():
 
@@ -558,6 +764,34 @@ def saveCities():
     session["selected_cities"] = request.json
 
     return {"success": True}
+
+
+@views.route("/mapSelection")
+def mapSelection():
+    # Flatten all cities with coordinates
+    all_cities = []
+    code_to_country = {k: v for k, v in COUNTRY_CODE_TO_NAME.items()}
+
+    for country_code, city_list in CITY_LIBRARY.items():
+        country_name = code_to_country.get(country_code, country_code)
+        for city in city_list:
+            coords = CITY_COORDS.get(city["code"], [0.0, 0.0])
+            all_cities.append({
+                "name": city["name"],
+                "code": city["code"],
+                "country": country_name,
+                "lat": coords[0],
+                "lon": coords[1]
+            })
+
+    selected_cities = session.get("selected_cities", [])
+    selected_codes = {c["code"] for c in selected_cities}
+
+    return render_template(
+        "mapSelection.html",
+        cities=all_cities,
+        selected_codes=list(selected_codes)
+    )
 
 
 
