@@ -1,51 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hotels</title>
+    <title>Country Selection</title>
 </head>
 <body>
 
-{% for hotel in hotels %}
+<h1>Select Countries</h1>
 
-    <div style="margin-bottom:50px">
+{% for country, neighbors in world_graph.items() %}
 
-        <h2>{{ hotel.name }}</h2>
+<div id="country-{{ country }}">
 
-        <p>
-            {{ hotel.city }},
-            {{ hotel.country }}
-        </p>
+    <h2>{{ country }}</h2>
 
-        <p>{{ hotel.description }}</p>
+    <p>Connections: {{ neighbors|join(", ") }}</p>
 
-        <!-- First image -->
-        {% if hotel.images %}
-            <img
-                src="http://photos.hotelbeds.com/giata/{{ hotel.images[0]['path'] }}"
-                width="350">
-        {% endif %}
+    <button onclick="acceptCountry('{{ country }}')">Yes</button>
+    <button onclick="rejectCountry('{{ country }}')">No</button>
 
-        <h4>Gallery</h4>
-
-        {% for image in hotel.images[:5] %}
-            <img
-                src="http://photos.hotelbeds.com/giata/{{ image['path'] }}"
-                width="200">
-        {% endfor %}
-
-        <h4>Facilities</h4>
-
-        <ul>
-        {% for facility in hotel.facilities[:10] %}
-            <li>
-                {{ facility['facilityCode'] }}
-            </li>
-        {% endfor %}
-        </ul>
-
-    </div>
+</div>
 
 {% endfor %}
+
+<hr>
+
+<a href="/citySelection">
+    <button>Continue to Cities</button>
+</a>
+
+<script>
+
+async function acceptCountry(country) {
+
+    await fetch("/acceptCountry", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({country})
+    });
+
+    document.getElementById("country-" + country).remove();
+}
+
+async function rejectCountry(country) {
+
+    await fetch("/rejectCountry", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({country})
+    });
+
+    document.getElementById("country-" + country).remove();
+}
+
+</script>
 
 </body>
 </html>
