@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transport • Viaggio</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      background: #f8fafc; 
+      margin: 0;
+      color: #1e293b;
+    }
+    .page-content {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    h1 { margin-top: 0; }
+    .placeholder {
+      background: #f1f5f9;
+      border: 2px dashed #cbd5e1;
+      padding: 40px;
+      border-radius: 10px;
+      text-align: center;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  {% include 'nav.html' %}
+  
+  <div class="page-content">
+    <div class="card">
+      <h1>Transport Selection</h1>
+      <p>Plan how you'll travel between your chosen destinations.</p>
+      
+      <div class="placeholder">
+        <h3>Coming soon</h3>
+        <p>This page will let you choose trains, flights, ferries, or road trips between cities.</p>
+        <p style="margin-top: 24px;">
+          For now, continue to the <a href="/map">Map</a> or <a href="/tripSummary">Trip Summary</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

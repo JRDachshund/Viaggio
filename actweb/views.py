@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, session, redirect
+from flask import Blueprint, render_template, request, session, redirect, redirect
 import hashlib
 import time
 import requests
@@ -128,11 +128,11 @@ def home():
 
     content_hotels = get_hotels_content(hotel_codes)
 
+    content_hotels = get_hotels_content(hotel_codes)
     selected_hotels = session.get("selected_hotels", {})
     rejected_hotels = session.get("rejected_hotels", [])
 
     selected_codes = []
-
     for city_hotels in selected_hotels.values():
         for hotel in city_hotels:
             selected_codes.append(str(hotel["code"]))
@@ -140,19 +140,17 @@ def home():
     enriched_hotels = []
 
     for hotel in hotels:
-
         code = hotel["code"]
 
         if str(code) in selected_codes:
             continue
-
         if str(code) in rejected_hotels:
             continue
 
+        
+        
         content = content_hotels.get(code, {})
-
         images = content.get("images", [])
-
         if not images:
             continue
 
@@ -160,17 +158,18 @@ def home():
             "code": str(code),
             "name": content.get("name", hotel.get("name")),
             "description": content.get("description", {}).get("content", ""),
-            "city": content.get("city", {}).get("content"),
-            "country": content.get("country", {}).get("description", {}).get("content"),
-            "latitude": content.get("coordinates", {}).get("latitude"),
-            "longitude": content.get("coordinates", {}).get("longitude"),
+            "city": content.get("city", {}).get("content", hotel.get("city", "")),
+            "country": content.get("country", {}).get("description", {}).get("content", hotel.get("country", "Demo")),
+            "latitude": content.get("latitude") or content.get("coordinates", {}).get("latitude"),
+            "longitude": content.get("longitude") or content.get("coordinates", {}).get("longitude"),
             "images": images,
             "facilities": content.get("facilities", [])
         })
 
     return render_template(
         "accommodationSelection.html",
-        hotels=enriched_hotels
+        hotels=enriched_hotels,
+        error=None
     )
 
 
@@ -1106,6 +1105,11 @@ def saveCities():
     print("Generated routes:", routes)
 
     return {"success": True}
+
+
+@views.route("/mapSelection")
+def mapSelection():
+    return("map.html")
 
 
 
