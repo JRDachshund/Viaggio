@@ -5,159 +5,424 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotels • Viaggio</title>
     <style>
-      body {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #f8fafc;
-        margin: 0;
-        color: #1e293b;
-      }
-      .page-content {
-        max-width: 900px;
-        margin: 40px auto;
-        padding: 0 24px 60px;
-      }
-    </style>
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f8fafc;
+    margin: 0;
+    color: #1e293b;
+  }
+
+  .swiper-page {
+    max-width: 520px;
+    margin: 20px auto 60px;
+    padding: 0 16px;
+    text-align: center;
+  }
+
+  .swiper-header {
+    margin-bottom: 16px;
+  }
+
+  .swiper-header h1 {
+    font-size: 1.85rem;
+    margin: 0 0 4px;
+    color: #0f172a;
+  }
+
+  .swiper-header p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.95rem;
+  }
+
+  .progress {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 12px;
+  }
+
+  .card-stack {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    height: 540px;
+    margin: 0 auto 28px;
+  }
+
+  .swipe-card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12),
+                0 4px 6px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    display: none;
+    flex-direction: column;
+    transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1), 
+                opacity 0.3s ease;
+  }
+
+  .swipe-card.active {
+    display: flex;
+  }
+
+  .card-content {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .swipe-card h2 {
+    font-size: 1.4rem;
+    margin: 0 0 4px;
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  .hotel-meta {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  .hotel-images {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .hotel-images img {
+    flex: 1;
+    max-height: 130px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .hotel-desc {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    color: #475569;
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .facilities {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-top: 6px;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 12px;
+  }
+
+  .action-btn {
+    padding: 0 28px;
+    height: 56px;
+    border-radius: 9999px;
+    border: none;
+    font-size: 1.05rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    min-width: 110px;
+  }
+
+  .action-btn:active {
+    transform: scale(0.96);
+  }
+
+  .btn-no {
+    background: white;
+    color: #e11d48;
+    border: 2px solid #fda4af;
+  }
+
+  .btn-no:hover {
+    background: #fff1f2;
+  }
+
+  .btn-yes {
+    background: #7c3aed;
+    color: white;
+  }
+
+  .btn-yes:hover {
+    background: #6b21a8;
+  }
+
+  .done-state {
+    max-width: 380px;
+    margin: 40px auto;
+    padding: 40px 24px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .done-state h2 {
+    margin: 0 0 12px;
+    font-size: 1.6rem;
+    color: #0f172a;
+  }
+
+  .done-state p {
+    color: #64748b;
+    margin-bottom: 24px;
+  }
+
+  .btn-continue {
+    display: inline-block;
+    background: #7c3aed;
+    color: white;
+    padding: 14px 36px;
+    border-radius: 9999px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background 0.2s;
+  }
+
+  .btn-continue:hover {
+    background: #6b21a8;
+  }
+</style>
 </head>
 <body>
   {% include 'nav.html' %}
 
-<div class="page-content">
+<div class="swiper-page">
 
-<h1>Hotel Selection</h1>
+  <div class="swiper-header">
+    <h1>Hotel Selection</h1>
+    <p>Use the buttons to go left (skip) or right (add to trip)</p>
+  </div>
 
-{% if error %}
-<div style="background:#fee2e2; color:#b91c1c; padding:16px; border-radius:8px; margin-bottom:20px; border:1px solid #fecaca;">
-    <strong>Error:</strong> {{ error }}
-</div>
-{% endif %}
+  <div class="progress" id="progress">0 / {{ hotels|length }} decided</div>
 
-{% if not hotels and not error %}
-<p>No hotels available right now for the selected cities (or all were already reviewed).</p>
-{% endif %}
+  <div class="card-stack" id="card-stack">
+    {% for hotel in hotels %}
+    <div class="swipe-card" id="hotel-{{ hotel.code }}" data-code="{{ hotel.code }}">
+      <div class="card-content">
+        <h2>{{ hotel.name }}</h2>
+        <div class="hotel-meta">{{ hotel.city }}, {{ hotel.country }}</div>
 
-{% for hotel in hotels %}
+        {% if hotel.images and hotel.images|length > 0 %}
+        <div class="hotel-images">
+          {% for i in range(2) %}
+            {% if i < hotel.images|length %}
+              {% set img_path = hotel.images[i].get('path', '') %}
+              <img src="{% if img_path.startswith('http') %}{{ img_path }}{% else %}http://photos.hotelbeds.com/giata/{{ img_path }}{% endif %}"
+                   alt="Hotel view {{ i+1 }}">
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
 
-<div
-    id="hotel-{{ hotel.code }}"
-    style="margin-bottom:50px">
+        <div class="hotel-desc">{{ hotel.description }}</div>
 
-    <h2>{{ hotel.name }}</h2>
+        <div class="facilities">
+          {% if hotel.facilities %}
+            Facilities: {% for f in hotel.facilities[:6] %}{{ f.facilityCode }}{% if not loop.last %}, {% endif %}{% endfor %}
+          {% endif %}
+        </div>
+      </div>
 
-    <p>
-        {{ hotel.city }},
-        {{ hotel.country }}
-    </p>
-
-    <p>{{ hotel.description }}</p>
-
-    {% set first_img = hotel.images[0]['path'] if hotel.images else '' %}
-    {% if first_img %}
-        <img
-            src="{% if first_img.startswith('http') %}{{ first_img }}{% else %}http://photos.hotelbeds.com/giata/{{ first_img }}{% endif %}"
-            width="350">
-    {% endif %}
-
-    <h4>Gallery</h4>
-
-    {% for image in hotel.images[:5] %}
-        {% set img_path = image['path'] %}
-        <img
-            src="{% if img_path.startswith('http') %}{{ img_path }}{% else %}http://photos.hotelbeds.com/giata/{{ img_path }}{% endif %}"
-            width="200">
+      {% set img_for_js = hotel.images[0].get('path', '') if hotel.images else '' %}
+      {% if not img_for_js.startswith('http') %}
+          {% set img_for_js = 'http://photos.hotelbeds.com/giata/' ~ img_for_js %}
+      {% endif %}
+      <script type="application/json" id="data-{{ hotel.code }}">
+      {
+          "code": "{{ hotel.code }}",
+          "name": {{ hotel.name|tojson }},
+          "description": {{ hotel.description|tojson }},
+          "city": {{ hotel.city|tojson }},
+          "country": {{ hotel.country|tojson }},
+          "latitude": "{{ hotel.latitude }}",
+          "longitude": "{{ hotel.longitude }}",
+          "image": "{{ img_for_js }}"
+      }
+      </script>
+    </div>
     {% endfor %}
+  </div>
 
-    <h4>Facilities</h4>
+  <div class="actions">
+    <button class="action-btn btn-no" id="btn-no" title="Skip this hotel">← Skip</button>
+    <button class="action-btn btn-yes" id="btn-yes" title="Add this hotel to trip">Add →</button>
+  </div>
 
-    <ul>
-    {% for facility in hotel.facilities[:10] %}
-        <li>{{ facility["facilityCode"] }}</li>
-    {% endfor %}
-    </ul>
-
-    <button onclick="saveHotel('{{ hotel.code }}')">
-        Yes
-    </button>
-
-    <button onclick="rejectHotel('{{ hotel.code }}')">
-        No
-    </button>
-
-
-    {% set img_for_js = hotel.images[0]['path'] if hotel.images else '' %}
-    {% if not img_for_js.startswith('http') %}
-        {% set img_for_js = 'http://photos.hotelbeds.com/giata/' ~ img_for_js %}
-    {% endif %}
-    <script type="application/json" id="data-{{ hotel.code }}">
-    {
-        "code": "{{ hotel.code }}",
-        "name": {{ hotel.name|tojson }},
-        "description": {{ hotel.description|tojson }},
-        "city": {{ hotel.city|tojson }},
-        "country": {{ hotel.country|tojson }},
-        "latitude": "{{ hotel.latitude }}",
-        "longitude": "{{ hotel.longitude }}",
-        "image": "{{ img_for_js }}"
-    }
-    </script>
+  <!-- Completion state -->
+  <div id="done-state" style="display: none; margin-top: 32px;">
+    <div class="done-state">
+      <h2>Great choices! 🎉</h2>
+      <p>You've finished selecting hotels.</p>
+      <a href="/tripSummary" class="btn-continue">Continue to Trip Summary →</a>
+    </div>
+  </div>
 
 </div>
-
-{% endfor %}
-
-<hr>
-
-<form action="/tripSummary">
-    <button type="submit">
-        Finish Selection
-    </button>
-</form>
-
 
 <script>
+let totalCards = 0;
+let decidedCount = 0;
 
-async function saveHotel(code) {
-
-    const hotelData =
-        JSON.parse(
-            document.getElementById(
-                "data-" + code
-            ).textContent
-        );
-
-    await fetch("/saveHotel", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(hotelData)
-    });
-
-    document.getElementById(
-        "hotel-" + code
-    ).remove();
+function updateProgress() {
+  const progressEl = document.getElementById('progress');
+  progressEl.textContent = `${decidedCount} / ${totalCards} decided`;
 }
 
-
-
-async function rejectHotel(code) {
-
-    await fetch("/rejectHotel", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            code: code
-        })
-    });
-
-    document.getElementById(
-        "hotel-" + code
-    ).remove();
+function showDoneState() {
+  document.getElementById('card-stack').style.display = 'none';
+  document.querySelector('.actions').style.display = 'none';
+  document.getElementById('done-state').style.display = 'block';
 }
 
+async function decideHotel(code, accepted) {
+  const endpoint = accepted ? '/saveHotel' : '/rejectHotel';
+  let body;
+
+  if (accepted) {
+    const dataEl = document.getElementById("data-" + code);
+    body = JSON.parse(dataEl.textContent);
+  } else {
+    body = { code: code };
+  }
+
+  try {
+    await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+  } catch (e) {
+    console.warn("Failed to save hotel decision", e);
+  }
+
+  decidedCount++;
+  updateProgress();
+
+  // Remove the card
+  const card = document.getElementById("hotel-" + code) || document.querySelector(`.swipe-card[data-code="${code}"]`);
+  if (card) card.remove();
+
+  const remaining = document.querySelectorAll('.swipe-card').length;
+  if (remaining === 0) {
+    setTimeout(showDoneState, 350);
+  } else {
+    showNextCard();
+  }
+}
+
+function showNextCard() {
+  const stack = document.getElementById('card-stack');
+  const cards = stack.querySelectorAll('.swipe-card');
+
+  if (cards.length === 0) {
+    return;
+  }
+
+  cards.forEach(c => {
+    c.classList.remove('active');
+    c.style.display = 'none';
+    c.style.transform = '';
+    c.style.opacity = '1';
+  });
+
+  const nextCard = cards[cards.length - 1];
+  nextCard.style.display = 'flex';
+  nextCard.classList.add('active');
+  nextCard.style.transition = 'none';
+  nextCard.style.transform = '';
+  nextCard.style.opacity = '1';
+
+  setTimeout(() => {
+    nextCard.style.transition = 'transform 0.45s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease';
+  }, 20);
+}
+
+function initSwiper() {
+  const stack = document.getElementById('card-stack');
+  const allCards = Array.from(stack.querySelectorAll('.swipe-card'));
+
+  totalCards = allCards.length;
+
+  if (allCards.length > 0) {
+    setTimeout(() => {
+      showNextCard();
+    }, 30);
+  }
+
+  updateProgress();
+
+  // Left = Skip
+  document.getElementById('btn-no').addEventListener('click', () => {
+    const topCard = document.querySelector('.swipe-card.active');
+    if (!topCard) return;
+
+    const code = topCard.dataset.code;
+
+    topCard.classList.remove('active');
+    topCard.style.transition = 'transform 0.45s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s';
+    topCard.style.transform = `translateX(-520px) rotate(-18deg)`;
+    topCard.style.opacity = '0';
+
+    setTimeout(() => {
+      decideHotel(code, false);
+    }, 320);
+  });
+
+  // Right = Add
+  document.getElementById('btn-yes').addEventListener('click', () => {
+    const topCard = document.querySelector('.swipe-card.active');
+    if (!topCard) return;
+
+    const code = topCard.dataset.code;
+
+    topCard.classList.remove('active');
+    topCard.style.transition = 'transform 0.45s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s';
+    topCard.style.transform = `translateX(520px) rotate(18deg)`;
+    topCard.style.opacity = '0';
+
+    setTimeout(() => {
+      decideHotel(code, true);
+    }, 320);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Handle empty case
+  const stack = document.getElementById('card-stack');
+  if (!stack || stack.querySelectorAll('.swipe-card').length === 0) {
+    const done = document.getElementById('done-state');
+    if (done) done.style.display = 'block';
+    const progress = document.getElementById('progress');
+    if (progress) progress.style.display = 'none';
+    const actions = document.querySelector('.actions');
+    if (actions) actions.style.display = 'none';
+    return;
+  }
+
+  initSwiper();
+});
 </script>
 
-</div>
 </body>
 </html>

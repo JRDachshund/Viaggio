@@ -13,25 +13,114 @@
     }
     
     .hero {
+      position: relative;
+      min-height: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
       background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%);
       color: white;
-      padding: 100px 24px 80px;
+    }
+
+    .hero-gallery {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      /* Bottom row pushed to bottom of purple band */
+      justify-content: space-between;
+    }
+
+    .top-marquee {
+      flex: 0 0 60%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .top-track {
+      display: flex;
+      width: 200%;
+      height: 100%;
+      gap: 20px;
+      animation: scroll-right 100s linear infinite;
+    }
+
+    .top-track img {
+      height: 100%;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    @keyframes scroll-right {
+      0% {
+        transform: translateX(-50%);
+      }
+      100% {
+        transform: translateX(0%);
+      }
+    }
+
+    .bottom-marquee {
+      flex: 0 0 32%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bottom-track {
+      display: flex;
+      width: 200%;
+      height: 100%;
+      gap: 20px;
+      animation: scroll-left 100s linear infinite;
+      align-items: flex-end;
+    }
+
+    .bottom-track img {
+      height: 100%;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    @keyframes scroll-left {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
       text-align: center;
+      max-width: 620px;
+      padding: 48px 28px;
+      background: rgba(0, 0, 0, 0.18);
+      border-radius: 20px;
+      backdrop-filter: blur(6px);
     }
     
-    .hero h1 {
-      font-size: 3.2rem;
-      margin: 0 0 16px;
+    .hero-content h1 {
+      font-size: 3.4rem;
+      margin: 0 0 12px;
       font-weight: 700;
       letter-spacing: -1px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.6);
     }
     
-    .hero p {
-      font-size: 1.25rem;
-      max-width: 520px;
-      margin: 0 auto 32px;
+    .hero-content p {
+      font-size: 1.2rem;
+      max-width: 480px;
+      margin: 0 auto 28px;
       opacity: 0.95;
       line-height: 1.5;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
     }
     
     .cta-button {
@@ -127,10 +216,51 @@
   {% include 'nav.html' %}
 
   <div class="hero">
-    <h1>Viaggio</h1>
-    <p>Plan beautiful multi-destination trips.<br>
-    Pick countries, choose cities, and book your hotels.</p>
-    <a href="/destinationSelection" class="cta-button">Start Planning Your Trip →</a>
+    <!-- Horizontal masonry-style image grid (pushed behind the purple band) -->
+    <div class="hero-gallery">
+      <!-- Top row: infinite horizontal scroll to the right (enter left, exit right) -->
+      <div class="top-marquee">
+        <div class="top-track">
+          <!-- First copy -->
+          <img src="https://picsum.photos/id/1015/800/600" style="width: 9%;" alt="Modern city architecture">
+          <img src="https://picsum.photos/id/160/800/600" style="width: 7.5%;" alt="Tropical beach destination">
+          <img src="https://picsum.photos/id/1016/800/600" style="width: 11%;" alt="Stylish hotel interior">
+          <img src="https://picsum.photos/id/1033/800/600" style="width: 7%;" alt="Vibrant urban street">
+          <img src="https://picsum.photos/id/1040/800/600" style="width: 8.5%;" alt="Scenic mountain landscape">
+          <img src="https://picsum.photos/id/29/800/600" style="width: 7%;" alt="Coastal city view">
+          <!-- Duplicate copy for seamless loop -->
+          <img src="https://picsum.photos/id/1015/800/600" style="width: 9%;" alt="Modern city architecture">
+          <img src="https://picsum.photos/id/160/800/600" style="width: 7.5%;" alt="Tropical beach destination">
+          <img src="https://picsum.photos/id/1016/800/600" style="width: 11%;" alt="Stylish hotel interior">
+          <img src="https://picsum.photos/id/1033/800/600" style="width: 7%;" alt="Vibrant urban street">
+          <img src="https://picsum.photos/id/1040/800/600" style="width: 8.5%;" alt="Scenic mountain landscape">
+          <img src="https://picsum.photos/id/29/800/600" style="width: 7%;" alt="Coastal city view">
+        </div>
+      </div>
+
+      <!-- Bottom row: infinite horizontal scroll to the left (enter right, exit left) -->
+      <div class="bottom-marquee">
+        <div class="bottom-track">
+          <!-- First copy -->
+          <img src="https://picsum.photos/id/201/800/600" style="flex: 0 0 11%;" alt="Mountain getaway">
+          <img src="https://picsum.photos/id/251/800/600" style="flex: 0 0 13%;" alt="Night city lights">
+          <img src="https://picsum.photos/id/108/800/600" style="flex: 0 0 11%;" alt="Historic building facade">
+          <img src="https://picsum.photos/id/133/800/600" style="flex: 0 0 13%;" alt="Lush landscape">
+          <!-- Duplicate copy for seamless loop -->
+          <img src="https://picsum.photos/id/201/800/600" style="flex: 0 0 11%;" alt="Mountain getaway">
+          <img src="https://picsum.photos/id/251/800/600" style="flex: 0 0 13%;" alt="Night city lights">
+          <img src="https://picsum.photos/id/108/800/600" style="flex: 0 0 11%;" alt="Historic building facade">
+          <img src="https://picsum.photos/id/133/800/600" style="flex: 0 0 13%;" alt="Lush landscape">
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <h1>Viaggio</h1>
+      <p>Plan beautiful multi-destination trips.<br>
+      Pick countries, choose cities, and book your hotels.</p>
+      <a href="/destinationSelection" class="cta-button">Start Planning Your Trip →</a>
+    </div>
   </div>
 
   <div class="section">
