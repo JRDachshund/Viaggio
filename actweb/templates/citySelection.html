@@ -79,6 +79,9 @@
             class="city-card"
             data-name="{{ city.name }}"
             data-code="{{ city.code }}"
+            data-country="{{ city.country }}"
+            data-latitude="{{ city.latitude }}"
+            data-longitude="{{ city.longitude }}"
         >
 
             <h3>{{ city.name }}</h3>
@@ -111,9 +114,11 @@ document.querySelectorAll(".city-card").forEach(card => {
 
         const city = {
             name: card.dataset.name,
-            code: card.dataset.code
+            code: card.dataset.code,
+            country: card.dataset.country,
+            latitude: parseFloat(card.dataset.latitude),
+            longitude: parseFloat(card.dataset.longitude)
         };
-
         if(card.classList.contains("selected")){
 
             selectedCities.push(city);
@@ -142,7 +147,7 @@ document.getElementById("continue").addEventListener("click", async () => {
 
     });
 
-    window.location.href="/accommodationSelection";
+    window.location.href="/routeSelection";
 
 });
 

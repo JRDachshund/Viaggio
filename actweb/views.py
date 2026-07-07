@@ -1,7 +1,10 @@
-from flask import Blueprint, render_template, request, session
+from flask import Blueprint, render_template, request, session, redirect
 import hashlib
 import time
 import requests
+from math import radians, sin, cos, sqrt, atan2
+import random
+
 
 views = Blueprint("views", __name__)
 
@@ -348,187 +351,720 @@ COUNTRY_CODE_TO_NAME = {
 }
 
 CITY_LIBRARY = {
-    "ES": [
-        {"name": "Barcelona", "code": "BCN"},
-        {"name": "Madrid", "code": "MAD"},
-        {"name": "Palma de Mallorca", "code": "PMI"},
-    ],
-    "PT": [
-        {"name": "Lisbon", "code": "LIS"},
-        {"name": "Porto", "code": "OPO"},
-    ],
-    "FR": [
-        {"name": "Paris", "code": "PAR"},
-        {"name": "Nice", "code": "NCE"},
-        {"name": "Lyon", "code": "LYS"},
-    ],
-    "GB": [
-        {"name": "London", "code": "LON"},
-        {"name": "Edinburgh", "code": "EDI"},
-    ],
-    "IE": [
-        {"name": "Dublin", "code": "DUB"},
-    ],
-    "BE": [
-        {"name": "Brussels", "code": "BRU"},
-    ],
-    "NL": [
-        {"name": "Amsterdam", "code": "AMS"},
-    ],
-    "DE": [
-        {"name": "Berlin", "code": "BER"},
-        {"name": "Munich", "code": "MUC"},
-        {"name": "Frankfurt", "code": "FRA"},
-    ],
+"ES": [
+    {
+        "name": "Barcelona",
+        "code": "BCN",
+        "country": "Spain",
+        "latitude": 41.3851,
+        "longitude": 2.1734
+    },
+    {
+        "name": "Madrid",
+        "code": "MAD",
+        "country": "Spain",
+        "latitude": 40.4168,
+        "longitude": -3.7038
+    },
+    {
+        "name": "Palma de Mallorca",
+        "code": "PMI",
+        "country": "Spain",
+        "latitude": 39.5696,
+        "longitude": 2.6502
+    },
+],
+
+"PT": [
+    {
+        "name": "Lisbon",
+        "code": "LIS",
+        "country": "Portugal",
+        "latitude": 38.7223,
+        "longitude": -9.1393
+    },
+    {
+        "name": "Porto",
+        "code": "OPO",
+        "country": "Portugal",
+        "latitude": 41.1579,
+        "longitude": -8.6291
+    },
+],
+
+"FR": [
+    {
+        "name": "Paris",
+        "code": "PAR",
+        "country": "France",
+        "latitude": 48.8566,
+        "longitude": 2.3522
+    },
+    {
+        "name": "Nice",
+        "code": "NCE",
+        "country": "France",
+        "latitude": 43.7102,
+        "longitude": 7.2620
+    },
+    {
+        "name": "Lyon",
+        "code": "LYS",
+        "country": "France",
+        "latitude": 45.7640,
+        "longitude": 4.8357
+    },
+],
+
+"GB": [
+    {
+        "name": "London",
+        "code": "LON",
+        "country": "United Kingdom",
+        "latitude": 51.5074,
+        "longitude": -0.1278
+    },
+    {
+        "name": "Edinburgh",
+        "code": "EDI",
+        "country": "United Kingdom",
+        "latitude": 55.9533,
+        "longitude": -3.1883
+    },
+],
+
+"IE": [
+    {
+        "name": "Dublin",
+        "code": "DUB",
+        "country": "Ireland",
+        "latitude": 53.3498,
+        "longitude": -6.2603
+    },
+],
+
+"BE": [
+    {
+        "name": "Brussels",
+        "code": "BRU",
+        "country": "Belgium",
+        "latitude": 50.8503,
+        "longitude": 4.3517
+    },
+],
+
+"NL": [
+    {
+        "name": "Amsterdam",
+        "code": "AMS",
+        "country": "Netherlands",
+        "latitude": 52.3676,
+        "longitude": 4.9041
+    },
+],
+
+"DE": [
+    {
+        "name": "Berlin",
+        "code": "BER",
+        "country": "Germany",
+        "latitude": 52.5200,
+        "longitude": 13.4050
+    },
+    {
+        "name": "Munich",
+        "code": "MUC",
+        "country": "Germany",
+        "latitude": 48.1351,
+        "longitude": 11.5820
+    },
+    {
+        "name": "Frankfurt",
+        "code": "FRA",
+        "country": "Germany",
+        "latitude": 50.1109,
+        "longitude": 8.6821
+    },
+],
     "CH": [
-        {"name": "Zurich", "code": "ZRH"},
-        {"name": "Geneva", "code": "GVA"},
-    ],
-    "AT": [
-        {"name": "Vienna", "code": "VIE"},
-    ],
-    "IT": [
-        {"name": "Rome", "code": "ROM"},
-        {"name": "Milan", "code": "MIL"},
-        {"name": "Venice", "code": "VCE"},
-    ],
-    "GR": [
-        {"name": "Athens", "code": "ATH"},
-        {"name": "Santorini", "code": "JTR"},
-    ],
-    "TR": [
-        {"name": "Istanbul", "code": "IST"},
-        {"name": "Antalya", "code": "AYT"},
-    ],
-    "DK": [
-        {"name": "Copenhagen", "code": "CPH"},
-    ],
-    "SE": [
-        {"name": "Stockholm", "code": "STO"},
-    ],
-    "NO": [
-        {"name": "Oslo", "code": "OSL"},
-    ],
-    "FI": [
-        {"name": "Helsinki", "code": "HEL"},
-    ],
-    "PL": [
-        {"name": "Warsaw", "code": "WAW"},
-        {"name": "Krakow", "code": "KRK"},
-    ],
-    "CZ": [
-        {"name": "Prague", "code": "PRG"},
-    ],
-    "SK": [
-        {"name": "Bratislava", "code": "BTS"},
-    ],
-    "HU": [
-        {"name": "Budapest", "code": "BUD"},
-    ],
-    "RO": [
-        {"name": "Bucharest", "code": "BUH"},
-    ],
-    "HR": [
-        {"name": "Dubrovnik", "code": "DBV"},
-        {"name": "Split", "code": "SPU"},
-    ],
-    "SI": [
-        {"name": "Ljubljana", "code": "LJU"},
-    ],
-    "MA": [
-        {"name": "Marrakech", "code": "RAK"},
-        {"name": "Casablanca", "code": "CAS"},
-    ],
-    "TN": [
-        {"name": "Tunis", "code": "TUN"},
-    ],
-    "EG": [
-        {"name": "Cairo", "code": "CAI"},
-        {"name": "Hurghada", "code": "HRG"},
-    ],
-    "AE": [
-        {"name": "Dubai", "code": "DXB"},
-        {"name": "Abu Dhabi", "code": "AUH"},
-    ],
-    "QA": [
-        {"name": "Doha", "code": "DOH"},
-    ],
-    "SA": [
-        {"name": "Riyadh", "code": "RUH"},
-        {"name": "Jeddah", "code": "JED"},
-    ],
-    "JO": [
-        {"name": "Amman", "code": "AMM"},
-    ],
-    "TH": [
-        {"name": "Bangkok", "code": "BKK"},
-        {"name": "Phuket", "code": "HKT"},
-    ],
-    "VN": [
-        {"name": "Ho Chi Minh City", "code": "SGN"},
-        {"name": "Hanoi", "code": "HAN"},
-    ],
-    "KH": [
-        {"name": "Phnom Penh", "code": "PNH"},
-    ],
-    "MY": [
-        {"name": "Kuala Lumpur", "code": "KUL"},
-    ],
-    "SG": [
-        {"name": "Singapore", "code": "SIN"},
-    ],
-    "ID": [
-        {"name": "Bali", "code": "DPS"},
-        {"name": "Jakarta", "code": "JKT"},
-    ],
-    "JP": [
-        {"name": "Tokyo", "code": "TYO"},
-        {"name": "Osaka", "code": "OSA"},
-        {"name": "Kyoto", "code": "UKY"},
-    ],
-    "KR": [
-        {"name": "Seoul", "code": "SEL"},
-    ],
-    "CN": [
-        {"name": "Beijing", "code": "BJS"},
-        {"name": "Shanghai", "code": "SHA"},
-    ],
-    "HK": [
-        {"name": "Hong Kong", "code": "HKG"},
-    ],
-    "US": [
-        {"name": "New York", "code": "NYC"},
-        {"name": "Los Angeles", "code": "LAX"},
-        {"name": "Miami", "code": "MIA"},
-    ],
-    "CA": [
-        {"name": "Toronto", "code": "YTO"},
-        {"name": "Vancouver", "code": "YVR"},
-    ],
-    "MX": [
-        {"name": "Cancun", "code": "CUN"},
-        {"name": "Mexico City", "code": "MEX"},
-    ],
-    "CU": [
-        {"name": "Havana", "code": "HAV"},
-    ],
-    "DO": [
-        {"name": "Punta Cana", "code": "PUJ"},
-    ],
-    "BR": [
-        {"name": "Rio de Janeiro", "code": "RIO"},
-        {"name": "São Paulo", "code": "SAO"},
-    ],
-    "AR": [
-        {"name": "Buenos Aires", "code": "BUE"},
-    ],
-    "CL": [
-        {"name": "Santiago", "code": "SCL"},
-    ],
-    "PE": [
-        {"name": "Lima", "code": "LIM"},
-        {"name": "Cusco", "code": "CUZ"},
-    ],
+    {
+        "name": "Zurich",
+        "code": "ZRH",
+        "country": "Switzerland",
+        "latitude": 47.3769,
+        "longitude": 8.5417
+    },
+    {
+        "name": "Geneva",
+        "code": "GVA",
+        "country": "Switzerland",
+        "latitude": 46.2044,
+        "longitude": 6.1432
+    },
+],
+
+"AT": [
+    {
+        "name": "Vienna",
+        "code": "VIE",
+        "country": "Austria",
+        "latitude": 48.2082,
+        "longitude": 16.3738
+    },
+],
+
+"IT": [
+    {
+        "name": "Rome",
+        "code": "ROM",
+        "country": "Italy",
+        "latitude": 41.9028,
+        "longitude": 12.4964
+    },
+    {
+        "name": "Milan",
+        "code": "MIL",
+        "country": "Italy",
+        "latitude": 45.4642,
+        "longitude": 9.1900
+    },
+    {
+        "name": "Venice",
+        "code": "VCE",
+        "country": "Italy",
+        "latitude": 45.4408,
+        "longitude": 12.3155
+    },
+],
+
+"GR": [
+    {
+        "name": "Athens",
+        "code": "ATH",
+        "country": "Greece",
+        "latitude": 37.9838,
+        "longitude": 23.7275
+    },
+    {
+        "name": "Santorini",
+        "code": "JTR",
+        "country": "Greece",
+        "latitude": 36.3932,
+        "longitude": 25.4615
+    },
+],
+
+"TR": [
+    {
+        "name": "Istanbul",
+        "code": "IST",
+        "country": "Turkey",
+        "latitude": 41.0082,
+        "longitude": 28.9784
+    },
+    {
+        "name": "Antalya",
+        "code": "AYT",
+        "country": "Turkey",
+        "latitude": 36.8969,
+        "longitude": 30.7133
+    },
+],
+
+"DK": [
+    {
+        "name": "Copenhagen",
+        "code": "CPH",
+        "country": "Denmark",
+        "latitude": 55.6761,
+        "longitude": 12.5683
+    },
+],
+
+"SE": [
+    {
+        "name": "Stockholm",
+        "code": "STO",
+        "country": "Sweden",
+        "latitude": 59.3293,
+        "longitude": 18.0686
+    },
+],
+
+"NO": [
+    {
+        "name": "Oslo",
+        "code": "OSL",
+        "country": "Norway",
+        "latitude": 59.9139,
+        "longitude": 10.7522
+    },
+],
+
+"FI": [
+    {
+        "name": "Helsinki",
+        "code": "HEL",
+        "country": "Finland",
+        "latitude": 60.1699,
+        "longitude": 24.9384
+    },
+],
+
+"PL": [
+    {
+        "name": "Warsaw",
+        "code": "WAW",
+        "country": "Poland",
+        "latitude": 52.2297,
+        "longitude": 21.0122
+    },
+    {
+        "name": "Krakow",
+        "code": "KRK",
+        "country": "Poland",
+        "latitude": 50.0647,
+        "longitude": 19.9450
+    },
+],
+
+"CZ": [
+    {
+        "name": "Prague",
+        "code": "PRG",
+        "country": "Czech Republic",
+        "latitude": 50.0755,
+        "longitude": 14.4378
+    },
+],
+
+"SK": [
+    {
+        "name": "Bratislava",
+        "code": "BTS",
+        "country": "Slovakia",
+        "latitude": 48.1486,
+        "longitude": 17.1077
+    },
+],
+
+"HU": [
+    {
+        "name": "Budapest",
+        "code": "BUD",
+        "country": "Hungary",
+        "latitude": 47.4979,
+        "longitude": 19.0402
+    },
+],
+
+"RO": [
+    {
+        "name": "Bucharest",
+        "code": "BUH",
+        "country": "Romania",
+        "latitude": 44.4268,
+        "longitude": 26.1025
+    },
+],
+
+"HR": [
+    {
+        "name": "Dubrovnik",
+        "code": "DBV",
+        "country": "Croatia",
+        "latitude": 42.6507,
+        "longitude": 18.0944
+    },
+    {
+        "name": "Split",
+        "code": "SPU",
+        "country": "Croatia",
+        "latitude": 43.5081,
+        "longitude": 16.4402
+    },
+],
+
+"SI": [
+    {
+        "name": "Ljubljana",
+        "code": "LJU",
+        "country": "Slovenia",
+        "latitude": 46.0569,
+        "longitude": 14.5058
+    },
+],
+
+"MA": [
+    {
+        "name": "Marrakech",
+        "code": "RAK",
+        "country": "Morocco",
+        "latitude": 31.6295,
+        "longitude": -7.9811
+    },
+    {
+        "name": "Casablanca",
+        "code": "CAS",
+        "country": "Morocco",
+        "latitude": 33.5731,
+        "longitude": -7.5898
+    },
+],
+
+"TN": [
+    {
+        "name": "Tunis",
+        "code": "TUN",
+        "country": "Tunisia",
+        "latitude": 36.8065,
+        "longitude": 10.1815
+    },
+],
+
+"EG": [
+    {
+        "name": "Cairo",
+        "code": "CAI",
+        "country": "Egypt",
+        "latitude": 30.0444,
+        "longitude": 31.2357
+    },
+    {
+        "name": "Hurghada",
+        "code": "HRG",
+        "country": "Egypt",
+        "latitude": 27.2579,
+        "longitude": 33.8116
+    },
+],
+"AE": [
+    {
+        "name": "Dubai",
+        "code": "DXB",
+        "country": "United Arab Emirates",
+        "latitude": 25.2048,
+        "longitude": 55.2708
+    },
+    {
+        "name": "Abu Dhabi",
+        "code": "AUH",
+        "country": "United Arab Emirates",
+        "latitude": 24.4539,
+        "longitude": 54.3773
+    },
+],
+
+"QA": [
+    {
+        "name": "Doha",
+        "code": "DOH",
+        "country": "Qatar",
+        "latitude": 25.2854,
+        "longitude": 51.5310
+    },
+],
+
+"SA": [
+    {
+        "name": "Riyadh",
+        "code": "RUH",
+        "country": "Saudi Arabia",
+        "latitude": 24.7136,
+        "longitude": 46.6753
+    },
+    {
+        "name": "Jeddah",
+        "code": "JED",
+        "country": "Saudi Arabia",
+        "latitude": 21.4858,
+        "longitude": 39.1925
+    },
+],
+
+"JO": [
+    {
+        "name": "Amman",
+        "code": "AMM",
+        "country": "Jordan",
+        "latitude": 31.9539,
+        "longitude": 35.9106
+    },
+],
+
+"TH": [
+    {
+        "name": "Bangkok",
+        "code": "BKK",
+        "country": "Thailand",
+        "latitude": 13.7563,
+        "longitude": 100.5018
+    },
+    {
+        "name": "Phuket",
+        "code": "HKT",
+        "country": "Thailand",
+        "latitude": 7.8804,
+        "longitude": 98.3923
+    },
+],
+
+"VN": [
+    {
+        "name": "Ho Chi Minh City",
+        "code": "SGN",
+        "country": "Vietnam",
+        "latitude": 10.8231,
+        "longitude": 106.6297
+    },
+    {
+        "name": "Hanoi",
+        "code": "HAN",
+        "country": "Vietnam",
+        "latitude": 21.0278,
+        "longitude": 105.8342
+    },
+],
+
+"KH": [
+    {
+        "name": "Phnom Penh",
+        "code": "PNH",
+        "country": "Cambodia",
+        "latitude": 11.5564,
+        "longitude": 104.9282
+    },
+],
+
+"MY": [
+    {
+        "name": "Kuala Lumpur",
+        "code": "KUL",
+        "country": "Malaysia",
+        "latitude": 3.1390,
+        "longitude": 101.6869
+    },
+],
+
+"SG": [
+    {
+        "name": "Singapore",
+        "code": "SIN",
+        "country": "Singapore",
+        "latitude": 1.3521,
+        "longitude": 103.8198
+    },
+],
+
+"ID": [
+    {
+        "name": "Bali",
+        "code": "DPS",
+        "country": "Indonesia",
+        "latitude": -8.6500,
+        "longitude": 115.2167
+    },
+    {
+        "name": "Jakarta",
+        "code": "JKT",
+        "country": "Indonesia",
+        "latitude": -6.2088,
+        "longitude": 106.8456
+    },
+],
+
+"JP": [
+    {
+        "name": "Tokyo",
+        "code": "TYO",
+        "country": "Japan",
+        "latitude": 35.6762,
+        "longitude": 139.6503
+    },
+    {
+        "name": "Osaka",
+        "code": "OSA",
+        "country": "Japan",
+        "latitude": 34.6937,
+        "longitude": 135.5023
+    },
+    {
+        "name": "Kyoto",
+        "code": "UKY",
+        "country": "Japan",
+        "latitude": 35.0116,
+        "longitude": 135.7681
+    },
+],
+
+"KR": [
+    {
+        "name": "Seoul",
+        "code": "SEL",
+        "country": "South Korea",
+        "latitude": 37.5665,
+        "longitude": 126.9780
+    },
+],
+
+"CN": [
+    {
+        "name": "Beijing",
+        "code": "BJS",
+        "country": "China",
+        "latitude": 39.9042,
+        "longitude": 116.4074
+    },
+    {
+        "name": "Shanghai",
+        "code": "SHA",
+        "country": "China",
+        "latitude": 31.2304,
+        "longitude": 121.4737
+    },
+],
+
+"HK": [
+    {
+        "name": "Hong Kong",
+        "code": "HKG",
+        "country": "Hong Kong",
+        "latitude": 22.3193,
+        "longitude": 114.1694
+    },
+],
+
+"US": [
+    {
+        "name": "New York",
+        "code": "NYC",
+        "country": "United States",
+        "latitude": 40.7128,
+        "longitude": -74.0060
+    },
+    {
+        "name": "Los Angeles",
+        "code": "LAX",
+        "country": "United States",
+        "latitude": 34.0522,
+        "longitude": -118.2437
+    },
+    {
+        "name": "Miami",
+        "code": "MIA",
+        "country": "United States",
+        "latitude": 25.7617,
+        "longitude": -80.1918
+    },
+],
+
+"CA": [
+    {
+        "name": "Toronto",
+        "code": "YTO",
+        "country": "Canada",
+        "latitude": 43.6532,
+        "longitude": -79.3832
+    },
+    {
+        "name": "Vancouver",
+        "code": "YVR",
+        "country": "Canada",
+        "latitude": 49.2827,
+        "longitude": -123.1207
+    },
+],
+
+"MX": [
+    {
+        "name": "Cancun",
+        "code": "CUN",
+        "country": "Mexico",
+        "latitude": 21.1619,
+        "longitude": -86.8515
+    },
+    {
+        "name": "Mexico City",
+        "code": "MEX",
+        "country": "Mexico",
+        "latitude": 19.4326,
+        "longitude": -99.1332
+    },
+],
+
+"CU": [
+    {
+        "name": "Havana",
+        "code": "HAV",
+        "country": "Cuba",
+        "latitude": 23.1136,
+        "longitude": -82.3666
+    },
+],
+
+"DO": [
+    {
+        "name": "Punta Cana",
+        "code": "PUJ",
+        "country": "Dominican Republic",
+        "latitude": 18.5601,
+        "longitude": -68.3725
+    },
+],
+
+"BR": [
+    {
+        "name": "Rio de Janeiro",
+        "code": "RIO",
+        "country": "Brazil",
+        "latitude": -22.9068,
+        "longitude": -43.1729
+    },
+    {
+        "name": "São Paulo",
+        "code": "SAO",
+        "country": "Brazil",
+        "latitude": -23.5505,
+        "longitude": -46.6333
+    },
+],
+
+"AR": [
+    {
+        "name": "Buenos Aires",
+        "code": "BUE",
+        "country": "Argentina",
+        "latitude": -34.6037,
+        "longitude": -58.3816
+    },
+],
+
+"CL": [
+    {
+        "name": "Santiago",
+        "code": "SCL",
+        "country": "Chile",
+        "latitude": -33.4489,
+        "longitude": -70.6693
+    },
+],
+
+"PE": [
+    {
+        "name": "Lima",
+        "code": "LIM",
+        "country": "Peru",
+        "latitude": -12.0464,
+        "longitude": -77.0428
+    },
+    {
+        "name": "Cusco",
+        "code": "CUZ",
+        "country": "Peru",
+        "latitude": -13.5319,
+        "longitude": -71.9675
+    },
+]
 }
 
 @views.route("/citySelection")
@@ -555,7 +1091,19 @@ def citySelection():
 @views.route("/saveCities", methods=["POST"])
 def saveCities():
 
-    session["selected_cities"] = request.json
+    selected_cities = request.json
+
+    session["selected_cities"] = selected_cities
+
+    print(selected_cities)
+
+    routes = generate_routes(selected_cities)
+
+    print("Routes")
+    print(routes)
+    session["generated_routes"] = routes
+
+    print("Generated routes:", routes)
 
     return {"success": True}
 
@@ -607,10 +1155,243 @@ def rejectCountry():
     session["rejected_countries"] = rejected
 
     return {"success": True}
+def haversine(city1, city2):
+
+    R = 6371
+
+    lat1 = radians(float(city1["latitude"]))
+    lon1 = radians(float(city1["longitude"]))
+
+    lat2 = radians(float(city2["latitude"]))
+    lon2 = radians(float(city2["longitude"]))
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = (
+        sin(dlat / 2) ** 2
+        + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    )
+
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    return R * c
 
 
+# ----------------------------------------------------
+# TOTAL ROUTE DISTANCE
+# ----------------------------------------------------
+def total_distance(route):
+
+    total = 0
+
+    for i in range(len(route) - 1):
+        total += haversine(route[i], route[i + 1])
+
+    return round(total, 1)
 
 
+# ----------------------------------------------------
+# NEAREST NEIGHBOUR ROUTE
+# ----------------------------------------------------
+def nearest_route(cities):
+
+    if not cities:
+        print("HERE")
+        return []
+
+    remaining = cities[:]
+
+    start = random.choice(remaining)
+
+    route = [start]
+
+    remaining.remove(start)
+
+    while remaining:
+
+        current = route[-1]
+
+        next_city = min(
+            remaining,
+            key=lambda city: haversine(current, city)
+        )
+
+        route.append(next_city)
+
+        remaining.remove(next_city)
+
+    return route
+
+
+# ----------------------------------------------------
+# COUNT COUNTRIES
+# ----------------------------------------------------
+def count_countries(route):
+
+    return len(set(city["country"] for city in route))
+
+
+# ----------------------------------------------------
+# GENERATE 4 ROUTES
+# ----------------------------------------------------
+def generate_routes(selected_cities):
+
+    # Ignore cities without coordinates
+    cities = [
+        city for city in selected_cities
+        if city.get("latitude") is not None
+        and city.get("longitude") is not None
+    ]
+    print("linlon")
+    print(cities)
+
+    if len(cities) < 2:
+        return []
+
+    routes = []
+
+    # ==================================================
+    # EASY
+    # ==================================================
+
+    easy = nearest_route(cities)
+
+    easy = easy[:min(3, len(easy))]
+
+    routes.append({
+
+        "name": "Easy",
+
+        "difficulty": 1,
+
+        "distance": total_distance(easy),
+
+        "countries": count_countries(easy),
+
+        "cities": easy
+
+    })
+
+
+    # ==================================================
+    # BALANCED
+    # ==================================================
+
+    balanced = nearest_route(cities)
+
+    balanced = balanced[:min(5, len(balanced))]
+
+    routes.append({
+
+        "name": "Balanced",
+
+        "difficulty": 2,
+
+        "distance": total_distance(balanced),
+
+        "countries": count_countries(balanced),
+
+        "cities": balanced
+
+    })
+
+
+    # ==================================================
+    # EXPLORER
+    # ==================================================
+
+    explorer = []
+
+    visited = set()
+
+    # Try to visit different countries first
+    for city in cities:
+
+        if city["country"] not in visited:
+
+            explorer.append(city)
+
+            visited.add(city["country"])
+
+    # Then add remaining cities
+    for city in cities:
+
+        if city not in explorer:
+
+            explorer.append(city)
+
+    explorer = nearest_route(explorer)
+
+    explorer = explorer[:min(7, len(explorer))]
+
+    routes.append({
+
+        "name": "Explorer",
+
+        "difficulty": 3,
+
+        "distance": total_distance(explorer),
+
+        "countries": count_countries(explorer),
+
+        "cities": explorer
+
+    })
+
+
+    # ==================================================
+    # GRAND TOUR
+    # ==================================================
+
+    grand = nearest_route(cities)
+
+    routes.append({
+
+        "name": "Grand Tour",
+
+        "difficulty": 4,
+
+        "distance": total_distance(grand),
+
+        "countries": count_countries(grand),
+
+        "cities": grand
+
+    })
+
+    return routes
+
+@views.route("/routeSelection")
+def routeSelection():
+
+    routes = session.get("generated_routes", [])
+    print(routes)
+
+    return render_template(
+        "routeSelection.html",
+        routes=routes
+    )
+
+@views.route("/selectRoute", methods=["POST"])
+def selectRoute():
+
+    route_index = int(request.form["route"])
+
+    routes = session.get("generated_routes", [])
+
+    if route_index < 0 or route_index >= len(routes):
+        return "Invalid route", 400
+
+    selected_route = routes[route_index]
+
+    # Save the complete route
+    session["selected_route"] = selected_route
+
+    # Save only the cities belonging to this route
+    session["selected_cities"] = selected_route["cities"]
+
+    return redirect("/accommodationSelection")
 
 @views.route("/transportSelection")
 def transportSelection():

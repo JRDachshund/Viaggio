@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Route Selection</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+
+            font-family:Arial, Helvetica, sans-serif;
+            background:#f4f6f9;
+            padding:40px;
+
+        }
+
+        h1{
+
+            text-align:center;
+            margin-bottom:10px;
+            color:#222;
+
+        }
+
+        .subtitle{
+
+            text-align:center;
+            color:#666;
+            margin-bottom:40px;
+
+        }
+
+        .routes{
+
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+            gap:30px;
+
+        }
+
+        .card{
+
+            background:white;
+
+            border-radius:15px;
+
+            padding:25px;
+
+            box-shadow:0px 8px 20px rgba(0,0,0,.08);
+
+            transition:.25s;
+
+        }
+
+        .card:hover{
+
+            transform:translateY(-5px);
+
+            box-shadow:0px 12px 30px rgba(0,0,0,.15);
+
+        }
+
+        h2{
+
+            margin-bottom:20px;
+
+            color:#1f2937;
+
+        }
+
+        .info{
+
+            margin-bottom:10px;
+
+            font-size:16px;
+
+        }
+
+        .label{
+
+            font-weight:bold;
+
+        }
+
+        hr{
+
+            margin:20px 0;
+
+        }
+
+        ul{
+
+            margin-top:15px;
+            margin-left:20px;
+
+        }
+
+        li{
+
+            margin-bottom:8px;
+
+        }
+
+        button{
+
+            width:100%;
+
+            margin-top:25px;
+
+            padding:14px;
+
+            border:none;
+
+            border-radius:10px;
+
+            background:#0d6efd;
+
+            color:white;
+
+            font-size:16px;
+
+            cursor:pointer;
+
+            transition:.2s;
+
+        }
+
+        button:hover{
+
+            background:#0b5ed7;
+
+        }
+
+        .difficulty{
+
+            color:#ffb400;
+            font-size:22px;
+
+        }
+
+        .route-city{
+
+            display:flex;
+
+            align-items:center;
+
+            margin-bottom:8px;
+
+        }
+
+        .arrow{
+
+            color:#999;
+
+            margin:6px 0;
+
+            font-size:18px;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h1>Choose Your Travel Route</h1>
+
+<p class="subtitle">
+Select one of the automatically generated itineraries.
+</p>
+
+<div class="routes">
+
+{% for route in routes %}
+
+<div class="card">
+
+    <h2>{{ route.name }}</h2>
+
+    <div class="info">
+        <span class="label">Difficulty:</span>
+
+        <span class="difficulty">
+
+        {% for i in range(route.difficulty) %}
+            ⭐
+        {% endfor %}
+
+        </span>
+
+    </div>
+
+    <div class="info">
+        <span class="label">Distance:</span>
+        {{ route.distance }} km
+    </div>
+
+    <div class="info">
+        <span class="label">Countries:</span>
+        {{ route.countries }}
+    </div>
+
+    <div class="info">
+        <span class="label">Cities:</span>
+        {{ route.cities|length }}
+    </div>
+
+    <hr>
+
+    <h3>Itinerary</h3>
+
+    <br>
+
+    {% for city in route.cities %}
+
+        <div class="route-city">
+
+            <strong>{{ city.name }}</strong>
+
+            &nbsp;
+
+            ({{ city.country }})
+
+        </div>
+
+        {% if not loop.last %}
+            <div class="arrow">↓</div>
+        {% endif %}
+
+    {% endfor %}
+
+    <form action="/selectRoute" method="POST">
+
+        <input
+            type="hidden"
+            name="route"
+            value="{{ loop.index0 }}"
+        >
+
+        <button type="submit">
+            Select this Route
+        </button>
+
+    </form>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</body>
+
+</html>
