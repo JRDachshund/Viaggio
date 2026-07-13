@@ -33,11 +33,12 @@ def get_headers():
 
 
 def search_hotels(destination_code):
-
+    print("!!!!!!")
+    print(destination_code)
     body = {
         "stay": {
-            "checkIn": "2026-07-10",
-            "checkOut": "2026-07-15"
+            "checkIn": "2026-10-10",
+            "checkOut": "2026-10-11"
         },
         "occupancies": [
             {
@@ -56,6 +57,9 @@ def search_hotels(destination_code):
         json=body,
         headers=get_headers()
     )
+
+    print(response.status_code)
+    print(response.text)
 
     response.raise_for_status()
 

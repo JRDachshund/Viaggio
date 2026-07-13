@@ -161,6 +161,14 @@
   .btn-continue:hover {
     background: #6b21a8;
   }
+
+  .swipe-card.active {
+    display: flex;
+}
+
+  .swipe-card:not(.active) {
+      display: none;
+  }
 </style>
 </head>
 
@@ -174,37 +182,44 @@
     <p>Choose which cities to include in your trip</p>
   </div>
 
-  <div class="progress" id="progress"></div>
+ <div class="progress" id="progress"></div>
 
+<div class="card-stack" id="card-stack">
+
+{% set first = true %}
 {% for country, city_list in cities.items() %}
+    {% for city in city_list %}
 
-<div class="country">
+    <div
+        class="swipe-card {% if first %}active{% endif %}"
+        data-name="{{ city.name }}"
+        data-code="{{ city.code }}"
+        data-country="{{ city.country }}"
+        data-latitude="{{ city.latitude }}"
+        data-longitude="{{ city.longitude }}"
+    >
 
-    <h2>{{ country }}</h2>
+        <div class="card-content">
 
-    <div class="cities">
+            <h2>{{ city.name }}</h2>
 
-        {% for city in city_list %}
+            <div class="city-code">
+                {{ city.code }}
+            </div>
 
-        <div
-            class="city-card"
-            data-name="{{ city.name }}"
-            data-code="{{ city.code }}"
-            data-country="{{ city.country }}"
-            data-latitude="{{ city.latitude }}"
-            data-longitude="{{ city.longitude }}"
-        >
-
-            <h3>{{ city.name }}</h3>
-
-            <p>{{ city.code }}</p>
+            <div class="city-country">
+                {{ city.country }}
+            </div>
 
         </div>
-      </div>
-      {% endfor %}
-    {% endfor %}
-  </div>
 
+    </div>
+
+    {% set first = false %}
+    {% endfor %}
+{% endfor %}
+
+</div>
   <div class="actions">
     <button class="action-btn btn-no" id="btn-no" title="Skip this city">← Skip</button>
     <button class="action-btn btn-yes" id="btn-yes" title="Add this city to trip">Add →</button>
@@ -221,54 +236,114 @@
 </div>
 
 <script>
-let totalCards = 0;
-let decidedCount = 0;
+const cards = Array.from(document.querySelectorAll(".swipe-card"));
+
+const progress = document.getElementById("progress");
+
+const doneState = document.getElementById("done-state");
+
+const stack = document.getElementById("card-stack");
+
+const btnYes = document.getElementById("btn-yes");
+
+const btnNo = document.getElementById("btn-no");
+
+const continueBtn = document.getElementById("continue-btn");
+
+let current = 0;
+
 let selectedCities = [];
 
-document.querySelectorAll(".city-card").forEach(card => {
+function updateProgress() {
 
-    card.addEventListener("click", () => {
+    progress.textContent =
+        `${Math.min(current + 1, cards.length)} / ${cards.length}`;
 
-        card.classList.toggle("selected");
+}
 
-        const city = {
-            name: card.dataset.name,
-            code: card.dataset.code,
-            country: card.dataset.country,
-            latitude: parseFloat(card.dataset.latitude),
-            longitude: parseFloat(card.dataset.longitude)
-        };
-        if(card.classList.contains("selected")){
+function showCard() {
 
-            selectedCities.push(city);
+    cards.forEach(card => card.classList.remove("active"));
 
-        }else{
+    if (current >= cards.length) {
 
-            selectedCities = selectedCities.filter(c => c.code !== city.code);
+        stack.style.display = "none";
 
-        }
+        document.querySelector(".actions").style.display = "none";
+
+        progress.style.display = "none";
+
+        doneState.style.display = "block";
+
+        return;
+
+    }
+
+    cards[current].classList.add("active");
+
+    updateProgress();
+
+}
+
+function nextCard() {
+
+    current++;
+
+    showCard();
+
+}
+
+btnYes.onclick = () => {
+
+    const card = cards[current];
+
+    selectedCities.push({
+
+        name: card.dataset.name,
+
+        code: card.dataset.code,
+
+        country: card.dataset.country,
+
+        latitude: parseFloat(card.dataset.latitude),
+
+        longitude: parseFloat(card.dataset.longitude)
 
     });
 
-});
+    nextCard();
 
-document.getElementById("continue").addEventListener("click", async () => {
+};
 
-    await fetch("/saveCities",{
+btnNo.onclick = () => {
 
-        method:"POST",
+    nextCard();
 
-        headers:{
-            "Content-Type":"application/json"
+};
+
+continueBtn.onclick = async (e) => {
+
+    e.preventDefault();
+
+    await fetch("/saveCities", {
+
+        method: "POST",
+
+        headers: {
+
+            "Content-Type": "application/json"
+
         },
 
-        body:JSON.stringify(selectedCities)
+        body: JSON.stringify(selectedCities)
 
     });
 
-    window.location.href="/routeSelection";
+    window.location.href = "/routeSelection";
 
-});
+};
+
+updateProgress();
 
 </script>
 
