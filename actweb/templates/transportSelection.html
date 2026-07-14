@@ -1,54 +1,152 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transport • Viaggio</title>
-  <style>
-    body { 
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-      background: #f8fafc; 
-      margin: 0;
-      color: #1e293b;
-    }
-    .page-content {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 0 24px;
-    }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 32px;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    }
-    h1 { margin-top: 0; }
-    .placeholder {
-      background: #f1f5f9;
-      border: 2px dashed #cbd5e1;
-      padding: 40px;
-      border-radius: 10px;
-      text-align: center;
-      color: #64748b;
-    }
-  </style>
+    <title>Select Transport</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .route-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .route-header {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .journey {
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+            background: #f9fbfd;
+            border-radius: 8px;
+        }
+
+        .time {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .duration {
+            color: #555;
+        }
+
+        .leg {
+            margin-top: 10px;
+            padding: 8px;
+            background: #eef3f7;
+            border-radius: 6px;
+        }
+
+        .mode {
+            font-weight: bold;
+            color: #2980b9;
+        }
+
+        button {
+            margin-top: 10px;
+            background: #3498db;
+            color:white;
+            border:none;
+            padding:10px 20px;
+            border-radius:8px;
+            cursor:pointer;
+        }
+
+        button:hover {
+            background:#217dbb;
+        }
+
+    </style>
 </head>
+
 <body>
-  {% include 'nav.html' %}
-  
-  <div class="page-content">
-    <div class="card">
-      <h1>Transport Selection</h1>
-      <p>Plan how you'll travel between your chosen destinations.</p>
-      
-      <div class="placeholder">
-        <h3>Coming soon</h3>
-        <p>This page will let you choose trains, flights, ferries, or road trips between cities.</p>
-        <p style="margin-top: 24px;">
-          For now, continue to the <a href="/map">Map</a> or <a href="/tripSummary">Trip Summary</a>.
-        </p>
-      </div>
+
+<h1>Select Transport</h1>
+
+
+{% for route in transport %}
+
+<div class="route-card">
+
+    <div class="route-header">
+        {{ route.from }} → {{ route.to }}
     </div>
-  </div>
+
+
+    {% if route.journey %}
+
+        {% for journey in route.journey %}
+
+        <div class="journey">
+
+            <div class="time">
+                {{ journey[1] }} → {{ journey[2] }}
+            </div>
+
+            <div class="duration">
+                Duration:
+                {{ (journey[0] // 3600) }}h
+                {{ ((journey[0] % 3600) // 60) }}min
+            </div>
+
+
+            <h4>Steps:</h4>
+
+            {% for leg in journey[5:] %}
+
+                <div class="leg">
+
+                    <span class="mode">
+                        {{ leg[0] }}
+                    </span>
+
+                    <br>
+
+                    {{ leg[1] }}
+
+                    →
+                    
+                    {{ leg[2] }}
+
+                </div>
+
+            {% endfor %}
+
+
+            <button>
+                Select this journey
+            </button>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p>No route available</p>
+
+    {% endif %}
+
+
+</div>
+
+{% endfor %}
+
+
 </body>
 </html>

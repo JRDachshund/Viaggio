@@ -4,7 +4,7 @@ import time
 import requests
 from math import radians, sin, cos, sqrt, atan2
 import random
-
+from db_api import search_route
 
 views = Blueprint("views", __name__)
 
@@ -1381,6 +1381,51 @@ def routeSelection():
         routes=routes
     )
 
+
+def build_transport(route):
+
+    transport = []
+
+    cities = route["cities"]
+
+    for i in range(len(cities)-1):
+
+        try:
+
+            itinerary = search_route(
+                cities[i],
+                cities[i+1]
+            )
+
+            transport.append({
+
+                "from": cities[i]["name"],
+
+                "to": cities[i+1]["name"],
+
+                "journey": itinerary
+
+            })
+
+        except Exception as e:
+
+            transport.append({
+
+                "from": cities[i]["name"],
+
+                "to": cities[i+1]["name"],
+
+                "journey": None,
+
+                "error": str(e)
+
+            })
+
+    print("ioioohohioh")
+    print("\n\n")
+    print(transport)
+    return transport
+
 @views.route("/selectRoute", methods=["POST"])
 def selectRoute():
 
@@ -1393,17 +1438,24 @@ def selectRoute():
 
     selected_route = routes[route_index]
 
-    # Save the complete route
+    selected_route["transport"] = build_transport(selected_route)
+
     session["selected_route"] = selected_route
 
-    # Save only the cities belonging to this route
-    session["selected_cities"] = selected_route["cities"]
+    # store transport server-side instead
+    session["transport"] = selected_route["transport"]
 
-    return redirect("/accommodationSelection")
+    return redirect("/transportSelection")
 
 @views.route("/transportSelection")
 def transportSelection():
-    return render_template("transportSelection.html")
+
+    transport = session.get("transport", [])
+
+    return render_template(
+        "transportSelection.html",
+        transport=transport
+    )
 
 
 @views.route("/")
