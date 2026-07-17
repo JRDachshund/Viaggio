@@ -1,152 +1,600 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>Select Transport</title>
 
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f7fa;
-            padding: 30px;
+
+        * {
+            box-sizing: border-box;
         }
+
+
+        body {
+
+            margin: 0;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: #f4f6f8;
+
+            color: #222;
+
+        }
+
+
+        .container {
+
+            max-width: 1100px;
+
+            margin: 40px auto;
+
+            padding: 0 20px;
+
+        }
+
 
         h1 {
-            text-align: center;
+
+            margin-bottom: 35px;
+
         }
 
-        .route-card {
+
+        .route-section {
+
             background: white;
+
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+            padding: 25px;
+
+            margin-bottom: 30px;
+
+            box-shadow:
+                0 3px 12px
+                rgba(0, 0, 0, 0.08);
+
         }
 
-        .route-header {
-            font-size: 22px;
+
+        .route-title {
+
+            font-size: 24px;
+
             font-weight: bold;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .route-arrow {
+
+            margin: 0 10px;
+
+            color: #777;
+
+        }
+
+
+        .journey-list {
+
+            display: grid;
+
+            gap: 15px;
+
+        }
+
+
+        .journey-option {
+
+            display: block;
+
+            cursor: pointer;
+
+        }
+
+
+        .journey-option input {
+
+            display: none;
+
+        }
+
+
+        .journey-card {
+
+            border: 2px solid #ddd;
+
+            border-radius: 10px;
+
+            padding: 18px;
+
+            transition: 0.2s;
+
+            background: #fafafa;
+
+        }
+
+
+        .journey-card:hover {
+
+            border-color: #888;
+
+            background: #f5f5f5;
+
+        }
+
+
+        .journey-option input:checked
+        + .journey-card {
+
+            border-color: #2563eb;
+
+            background: #eff6ff;
+
+        }
+
+
+        .journey-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
             margin-bottom: 15px;
+
         }
 
-        .journey {
-            border-left: 4px solid #3498db;
-            padding: 15px;
-            margin: 15px 0;
-            background: #f9fbfd;
-            border-radius: 8px;
-        }
 
-        .time {
+        .journey-number {
+
+            font-weight: bold;
+
             font-size: 18px;
+
+        }
+
+
+        .journey-time {
+
+            font-size: 18px;
+
             font-weight: bold;
+
         }
 
-        .duration {
-            color: #555;
+
+        .journey-duration {
+
+            color: #666;
+
+            font-size: 14px;
+
+            margin-bottom: 15px;
+
         }
 
-        .leg {
-            margin-top: 10px;
-            padding: 8px;
-            background: #eef3f7;
+
+        .segments {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            align-items: center;
+
+        }
+
+
+        .segment {
+
+            padding: 10px 12px;
+
             border-radius: 6px;
+
+            background: #e5e7eb;
+
+            font-size: 14px;
+
         }
 
-        .mode {
+
+        .segment-type {
+
             font-weight: bold;
-            color: #2980b9;
+
         }
+
+
+        .segment-arrow {
+
+            color: #777;
+
+            font-size: 18px;
+
+        }
+
+
+        .submit-container {
+
+            text-align: center;
+
+            margin: 40px 0;
+
+        }
+
 
         button {
-            margin-top: 10px;
-            background: #3498db;
-            color:white;
-            border:none;
-            padding:10px 20px;
-            border-radius:8px;
-            cursor:pointer;
+
+            padding: 14px 30px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            background: #2563eb;
+
+            color: white;
+
+            font-size: 17px;
+
+            cursor: pointer;
+
         }
 
+
         button:hover {
-            background:#217dbb;
+
+            background: #1d4ed8;
+
+        }
+
+
+        .no-journey {
+
+            padding: 15px;
+
+            color: #b91c1c;
+
+            background: #fee2e2;
+
+            border-radius: 8px;
+
+        }
+
+
+        .error-message {
+
+            margin-top: 10px;
+
+            color: #b91c1c;
+
+            font-size: 14px;
+
+        }
+
+
+        @media (max-width: 700px) {
+
+            .journey-header {
+
+                flex-direction: column;
+
+                align-items: flex-start;
+
+                gap: 8px;
+
+            }
+
+
+            .segments {
+
+                flex-direction: column;
+
+                align-items: stretch;
+
+            }
+
+
+            .segment-arrow {
+
+                text-align: center;
+
+            }
+
         }
 
     </style>
+
 </head>
+
 
 <body>
 
-<h1>Select Transport</h1>
+
+<div class="container">
 
 
-{% for route in transport %}
-
-<div class="route-card">
-
-    <div class="route-header">
-        {{ route.from }} → {{ route.to }}
-    </div>
+    <h1>Select your transport</h1>
 
 
-    {% if route.journey %}
-
-        {% for journey in route.journey %}
-
-        <div class="journey">
-
-            <div class="time">
-                {{ journey[1] }} → {{ journey[2] }}
-            </div>
-
-            <div class="duration">
-                Duration:
-                {{ (journey[0] // 3600) }}h
-                {{ ((journey[0] % 3600) // 60) }}min
-            </div>
+    <form
+        method="POST"
+        action="/confirmTransport"
+    >
 
 
-            <h4>Steps:</h4>
+        {% for connection in transport %}
 
-            {% for leg in journey[5:] %}
 
-                <div class="leg">
+            {# Save the outer loop index #}
 
-                    <span class="mode">
-                        {{ leg[0] }}
+            {% set connection_index = loop.index0 %}
+
+
+            <section class="route-section">
+
+
+                <div class="route-title">
+
+                    {{ connection.from }}
+
+                    <span class="route-arrow">
+                        →
                     </span>
 
-                    <br>
-
-                    {{ leg[1] }}
-
-                    →
-                    
-                    {{ leg[2] }}
+                    {{ connection.to }}
 
                 </div>
 
-            {% endfor %}
+
+                {% if connection.journey %}
 
 
-            <button>
-                Select this journey
-            </button>
+                    <div class="journey-list">
 
-        </div>
+
+                        {% for journey in connection.journey %}
+
+
+                            <label class="journey-option">
+
+
+                                <input
+
+                                    type="radio"
+
+                                    name="transport_{{ connection_index }}"
+
+                                    value="{{ loop.index0 }}"
+
+                                    required
+
+                                >
+
+
+                                <div class="journey-card">
+
+
+                                    <div
+                                        class="journey-header"
+                                    >
+
+
+                                        <div
+                                            class="journey-number"
+                                        >
+
+                                            Option {{ loop.index }}
+
+                                        </div>
+
+
+                                        <div
+                                            class="journey-time"
+                                        >
+
+                                            {{ journey[1][11:16] }}
+
+                                            →
+
+                                            {{ journey[2][11:16] }}
+
+                                        </div>
+
+
+                                    </div>
+
+
+                                    <div
+                                        class="journey-duration"
+                                    >
+
+
+                                        {% set duration_minutes =
+                                            journey[0] // 60
+                                        %}
+
+
+                                        {% set hours =
+                                            duration_minutes // 60
+                                        %}
+
+
+                                        {% set minutes =
+                                            duration_minutes % 60
+                                        %}
+
+
+                                        <strong>
+                                            Duration:
+                                        </strong>
+
+
+                                        {% if hours > 0 %}
+
+                                            {{ hours }}h
+
+                                        {% endif %}
+
+
+                                        {{ minutes }}min
+
+
+                                        &nbsp;·&nbsp;
+
+
+                                        {% if journey[3] == 0 %}
+
+                                            Direct
+
+                                        {% else %}
+
+                                            {{ journey[3] }}
+
+                                            transfer
+
+                                            {% if journey[3] != 1 %}
+                                                s
+                                            {% endif %}
+
+                                        {% endif %}
+
+
+                                    </div>
+
+
+                                    <div class="segments">
+
+
+                                        {% for segment in journey[5:] %}
+
+
+                                            <div
+                                                class="segment"
+                                            >
+
+
+                                                <span
+                                                    class="segment-type"
+                                                >
+
+                                                    {{ segment[0] }}
+
+                                                </span>
+
+
+                                                <br>
+
+
+                                                {{ segment[1] }}
+
+                                                →
+
+                                                {{ segment[2] }}
+
+
+                                            </div>
+
+
+                                            {% if not loop.last %}
+
+                                                <span
+                                                    class="segment-arrow"
+                                                >
+                                                    →
+                                                </span>
+
+                                            {% endif %}
+
+
+                                        {% endfor %}
+
+
+                                    </div>
+
+
+                                </div>
+
+
+                            </label>
+
+
+                        {% endfor %}
+
+
+                    </div>
+
+
+                {% else %}
+
+
+                    <div class="no-journey">
+
+                        No transport connection found for this route.
+
+
+                        {% if connection.error %}
+
+                            <div class="error-message">
+
+                                {{ connection.error }}
+
+                            </div>
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                {% endif %}
+
+
+            </section>
+
 
         {% endfor %}
 
-    {% else %}
 
-        <p>No route available</p>
+        <div class="submit-container">
 
-    {% endif %}
+
+            <button type="submit">
+
+                Continue
+
+            </button>
+
+
+        </div>
+
+
+    </form>
 
 
 </div>
 
-{% endfor %}
-
 
 </body>
+
 </html>

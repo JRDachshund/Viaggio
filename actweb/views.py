@@ -1,3 +1,5 @@
+"""
+
 from flask import Blueprint, render_template, request, session, redirect, redirect
 import hashlib
 import time
@@ -245,30 +247,7 @@ def map():
     return render_template("map.html")
 
 WORLD_GRAPH = {
-    "Spain": ["Portugal", "France", "Italy"],
-    "Portugal": ["Spain"],
-    "France": ["Spain", "Belgium", "Germany", "Switzerland", "Italy", "United Kingdom", "Netherlands"],
-    "United Kingdom": ["France", "Ireland"],
-    "Ireland": ["United Kingdom"],
-    "Belgium": ["France", "Netherlands", "Germany"],
-    "Netherlands": ["Belgium", "Germany"],
-    "Germany": ["France", "Netherlands", "Belgium", "Switzerland", "Austria", "Czech Republic", "Poland"],
-    "Switzerland": ["France", "Germany", "Italy", "Austria"],
-    "Italy": ["France", "Switzerland", "Austria", "Slovenia"],
-    "Greece": ["Italy", "Turkey"],
-    "Turkey": ["Greece", "Italy"],
-    "Denmark": ["Germany", "Sweden"],
-    "Sweden": ["Denmark", "Norway", "Finland"],
-    "Norway": ["Sweden"],
-    "Finland": ["Sweden"],
-    "Poland": ["Germany", "Czech Republic", "Slovakia"],
-    "Czech Republic": ["Germany", "Poland", "Austria", "Slovakia"],
-    "Slovakia": ["Poland", "Czech Republic", "Austria"],
-    "Hungary": ["Austria", "Slovakia", "Croatia", "Romania"],
-    "Romania": ["Hungary", "Bulgaria"],
-    "Croatia": ["Slovenia", "Hungary", "Italy"],
-    "Slovenia": ["Italy", "Austria", "Croatia"],
-    "Morocco": ["Spain", "France"],
+        "Morocco": ["Spain", "France"],
     "Tunisia": ["France", "Italy"],
     "Egypt": ["Italy", "Greece"],
     "United Arab Emirates": ["Qatar", "Saudi Arabia", "Turkey"],
@@ -293,7 +272,31 @@ WORLD_GRAPH = {
     "Brazil": ["Argentina", "Chile", "Peru"],
     "Argentina": ["Brazil", "Chile"],
     "Chile": ["Argentina", "Peru"],
-    "Peru": ["Chile", "Brazil"]
+    "Peru": ["Chile", "Brazil"],
+    "Spain": ["Portugal", "France", "Italy"],
+    "Portugal": ["Spain"],
+    "France": ["Spain", "Belgium", "Germany", "Switzerland", "Italy", "United Kingdom", "Netherlands"],
+    "United Kingdom": ["France", "Ireland"],
+    "Ireland": ["United Kingdom"],
+    "Greece": ["Italy", "Turkey"],
+    "Turkey": ["Greece", "Italy"],
+    "Denmark": ["Germany", "Sweden"],
+    "Sweden": ["Denmark", "Norway", "Finland"],
+    "Norway": ["Sweden"],
+    "Finland": ["Sweden"],
+    "Poland": ["Germany", "Czech Republic", "Slovakia"],
+    "Czech Republic": ["Germany", "Poland", "Austria", "Slovakia"],
+    "Slovakia": ["Poland", "Czech Republic", "Austria"],
+    "Hungary": ["Austria", "Slovakia", "Croatia", "Romania"],
+    "Romania": ["Hungary", "Bulgaria"],
+    "Croatia": ["Slovenia", "Hungary", "Italy"],
+    "Slovenia": ["Italy", "Austria", "Croatia"],
+    "Switzerland": ["France", "Germany", "Italy", "Austria"],
+    "Italy": ["France", "Switzerland", "Austria", "Slovenia"],
+    "Belgium": ["France", "Netherlands", "Germany"],
+    "Netherlands": ["Belgium", "Germany"],
+    "Germany": ["France", "Netherlands", "Belgium", "Switzerland", "Austria", "Czech Republic", "Poland"]
+
 }
 
 
@@ -1388,43 +1391,38 @@ def build_transport(route):
 
     cities = route["cities"]
 
-    for i in range(len(cities)-1):
+    for i in range(len(cities) - 1):
+
+        from_city = cities[i]["name"]
+        to_city = cities[i + 1]["name"]
 
         try:
 
             itinerary = search_route(
                 cities[i],
-                cities[i+1]
+                cities[i + 1]
             )
 
             transport.append({
-
-                "from": cities[i]["name"],
-
-                "to": cities[i+1]["name"],
-
+                "from": from_city,
+                "to": to_city,
                 "journey": itinerary
-
             })
 
         except Exception as e:
 
             transport.append({
-
-                "from": cities[i]["name"],
-
-                "to": cities[i+1]["name"],
-
+                "from": from_city,
+                "to": to_city,
                 "journey": None,
-
                 "error": str(e)
-
             })
 
-    print("ioioohohioh")
-    print("\n\n")
+    print("Transport:")
     print(transport)
+
     return transport
+
 
 @views.route("/selectRoute", methods=["POST"])
 def selectRoute():
@@ -1438,14 +1436,16 @@ def selectRoute():
 
     selected_route = routes[route_index]
 
-    selected_route["transport"] = build_transport(selected_route)
+    transport = build_transport(selected_route)
+
+    selected_route["transport"] = transport
 
     session["selected_route"] = selected_route
 
-    # store transport server-side instead
-    session["transport"] = selected_route["transport"]
+    session["transport"] = transport
 
     return redirect("/transportSelection")
+
 
 @views.route("/transportSelection")
 def transportSelection():
@@ -1458,6 +1458,58 @@ def transportSelection():
     )
 
 
+@views.route("/confirmTransport", methods=["POST"])
+def confirmTransport():
+
+    transport = session.get("transport", [])
+
+    selected_transport = []
+
+    for connection_index, connection in enumerate(transport):
+
+        selected_index = request.form.get(
+            f"transport_{connection_index}"
+        )
+
+        if selected_index is None:
+            return (
+                "Please select a transport option for every route.",
+                400
+            )
+
+        selected_index = int(selected_index)
+
+        journeys = connection.get("journey")
+
+        if not journeys:
+            return (
+                f"No journey available for "
+                f"{connection['from']} to {connection['to']}.",
+                400
+            )
+
+        if selected_index < 0 or selected_index >= len(journeys):
+            return "Invalid journey selection.", 400
+
+        selected_journey = journeys[selected_index]
+
+        selected_transport.append({
+
+            "from": connection["from"],
+
+            "to": connection["to"],
+
+            "journey": selected_journey
+
+        })
+
+    session["selected_transport"] = selected_transport
+
+    return redirect("/accommodationSelection")
+
+
 @views.route("/")
 def accommodationSelection():
     return render_template("homePage.html")
+
+"""
