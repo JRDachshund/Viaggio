@@ -40,12 +40,29 @@ def search_route(origin, destination):
     print("==============================")
     print(params)
 
-    response = requests.get(BASE_URL, params=params)
+    headers = {
+    "User-Agent": "MyTransitApp/1.0 (contact: your-email@example.com)"
+}
+
+    response = requests.get(
+        BASE_URL,
+        params=params,
+        headers=headers
+    )
+    #response = requests.get(BASE_URL, params=params)
 
     print("\nStatus:", response.status_code)
     print("URL:", response.url)
 
-    response.raise_for_status()
+    
+    if response.status_code != 200:
+        print("Response headers:")
+        print(dict(response.headers))
+
+        print("\nResponse body:")
+        print(response.text)
+
+        response.raise_for_status()
 
     data = response.json()
 

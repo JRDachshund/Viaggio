@@ -901,6 +901,9 @@ def citySelection():
         if code and code in CITY_LIBRARY:
 
             available_cities[country] = CITY_LIBRARY[code]
+            print("!")
+            print(CITY_LIBRARY[code])
+            
 
     return render_template(
 
@@ -1167,7 +1170,7 @@ def count_countries(route):
 
 
 def generate_routes(selected_cities):
-
+    print(selected_cities)
     cities = [
 
         city
