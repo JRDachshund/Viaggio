@@ -440,13 +440,154 @@ def tripSummary():
     )
 
 
+from datetime import datetime
+
+
 @alt.route("/map")
 def map():
 
-    return render_template(
-        "map.html"
-    )
+    # Create a display-ready copy of the selected transport
+    display_transport = []
 
+
+    for connection in selected_transport:
+
+
+        journey = connection["journey"]
+
+
+        # Raw journey structure:
+        #
+        # journey[0] = duration in seconds
+        # journey[1] = departure timestamp
+        # journey[2] = arrival timestamp
+        # journey[3] = transport mode
+        # journey[4] = journey ID
+        # journey[5:] = individual journey legs
+
+
+        duration_seconds = journey[0]
+
+
+        departure_timestamp = journey[1]
+
+
+        arrival_timestamp = journey[2]
+
+
+        mode = journey[3]
+
+
+        legs = journey[5:]
+
+
+        # Convert departure timestamp into display time
+
+
+        departure_datetime = datetime.fromisoformat(
+
+            departure_timestamp.replace(
+                "Z",
+                "+00:00"
+            )
+
+        )
+
+
+        departure_time = departure_datetime.strftime(
+            "%H:%M"
+        )
+
+
+        # Convert arrival timestamp into display time
+
+
+        arrival_datetime = datetime.fromisoformat(
+
+            arrival_timestamp.replace(
+                "Z",
+                "+00:00"
+            )
+
+        )
+
+
+        arrival_time = arrival_datetime.strftime(
+            "%H:%M"
+        )
+
+
+        # Convert duration from seconds to hours/minutes
+
+
+        hours = duration_seconds // 3600
+
+
+        minutes = (
+
+            duration_seconds % 3600
+
+        ) // 60
+
+
+        if hours > 0:
+
+            duration = (
+
+                f"{hours}h "
+                f"{minutes}m"
+
+            )
+
+        else:
+
+            duration = (
+
+                f"{minutes}m"
+
+            )
+
+
+        # Add a display-ready connection
+
+
+        display_transport.append({
+
+            "from":
+                connection["from"],
+
+            "to":
+                connection["to"],
+
+            "departure_time":
+                departure_time,
+
+            "arrival_time":
+                arrival_time,
+
+            "duration":
+                duration,
+
+            "mode":
+                mode,
+
+            "legs":
+                legs
+
+        })
+
+
+    return render_template(
+
+        "map.html",
+
+        selected_route=selected_route,
+
+        selected_transport=display_transport,
+
+        selected_hotels=selected_hotels
+
+    )
 
 # ============================================================
 # WORLD GRAPH

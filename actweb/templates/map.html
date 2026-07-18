@@ -1,68 +1,1289 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Map • Viaggio</title>
-  <style>
-    body { 
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-      background: #f8fafc; 
-      margin: 0;
-      color: #1e293b;
+
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Your Travel Route</title>
+
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+>
+
+
+<style>
+
+    * {
+        box-sizing: border-box;
     }
-    .page-content {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 0 24px;
+
+
+    body {
+
+        margin: 0;
+
+        font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+
+        background: #f5f6f8;
+
     }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 32px;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+
+
+    .page {
+
+        display: flex;
+
+        width: 100%;
+
+        height: 100vh;
+
     }
-    h1 { margin-top: 0; }
-    .map-placeholder {
-      height: 420px;
-      background: linear-gradient(145deg, #e0f2fe, #f0fdfa);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      border: 1px solid #bae6fd;
-      margin-top: 20px;
+
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+
+    .sidebar {
+
+        width: 430px;
+
+        background: white;
+
+        padding: 28px;
+
+        overflow-y: auto;
+
+        box-shadow:
+            2px 0 12px
+            rgba(0, 0, 0, 0.08);
+
+        z-index: 1000;
+
     }
-    .map-placeholder h3 {
-      margin: 0 0 8px;
-      color: #0369a1;
+
+
+    .sidebar h1 {
+
+        margin: 0;
+
+        font-size: 28px;
+
     }
-    .note {
-      font-size: 0.95rem;
-      color: #64748b;
+
+
+    .sidebar h2 {
+
+        margin-top: 30px;
+
+        margin-bottom: 14px;
+
+        font-size: 20px;
+
     }
-  </style>
+
+
+    /* =====================================================
+       ROUTE HEADER
+    ===================================================== */
+
+
+    .route-summary {
+
+        margin-top: 10px;
+
+        padding: 16px;
+
+        border-radius: 14px;
+
+        background: #f1f5f9;
+
+    }
+
+
+    .route-name {
+
+        font-size: 20px;
+
+        font-weight: 700;
+
+        margin-bottom: 8px;
+
+    }
+
+
+    .route-stats {
+
+        display: flex;
+
+        gap: 16px;
+
+        color: #64748b;
+
+        font-size: 14px;
+
+        flex-wrap: wrap;
+
+    }
+
+
+    /* =====================================================
+       TRANSPORT TIMELINE
+    ===================================================== */
+
+
+    .transport-list {
+
+        position: relative;
+
+    }
+
+
+    .transport-list::before {
+
+        content: "";
+
+        position: absolute;
+
+        left: 18px;
+
+        top: 20px;
+
+        bottom: 20px;
+
+        width: 2px;
+
+        background: #dbeafe;
+
+    }
+
+
+    .transport-card {
+
+        position: relative;
+
+        display: flex;
+
+        gap: 14px;
+
+        margin-bottom: 20px;
+
+    }
+
+
+    .transport-icon {
+
+        position: relative;
+
+        flex-shrink: 0;
+
+        width: 38px;
+
+        height: 38px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        color: white;
+
+        font-size: 17px;
+
+        z-index: 2;
+
+    }
+
+
+    .transport-content {
+
+        flex: 1;
+
+        padding: 14px;
+
+        border: 1px solid #e2e8f0;
+
+        border-radius: 14px;
+
+        background: white;
+
+    }
+
+
+    .transport-route {
+
+        font-size: 16px;
+
+        font-weight: 700;
+
+        margin-bottom: 10px;
+
+    }
+
+
+    .transport-times {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+
+        margin-bottom: 10px;
+
+    }
+
+
+    .time-block {
+
+        display: flex;
+
+        flex-direction: column;
+
+    }
+
+
+    .time {
+
+        font-size: 18px;
+
+        font-weight: 700;
+
+    }
+
+
+    .time-label {
+
+        font-size: 11px;
+
+        color: #94a3b8;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.5px;
+
+    }
+
+
+    .time-arrow {
+
+        color: #94a3b8;
+
+        font-size: 18px;
+
+    }
+
+
+    .transport-meta {
+
+        display: flex;
+
+        gap: 8px;
+
+        flex-wrap: wrap;
+
+    }
+
+
+    .badge {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        padding: 5px 9px;
+
+        border-radius: 999px;
+
+        background: #eff6ff;
+
+        color: #1d4ed8;
+
+        font-size: 12px;
+
+        font-weight: 600;
+
+    }
+
+
+    .badge.duration {
+
+        background: #f1f5f9;
+
+        color: #475569;
+
+    }
+
+
+    /* =====================================================
+       HOTELS
+    ===================================================== */
+
+
+    .hotel-card {
+
+        display: flex;
+
+        gap: 12px;
+
+        margin-bottom: 14px;
+
+        padding: 12px;
+
+        border: 1px solid #e2e8f0;
+
+        border-radius: 14px;
+
+        background: white;
+
+    }
+
+
+    .hotel-image {
+
+        width: 90px;
+
+        height: 90px;
+
+        object-fit: cover;
+
+        border-radius: 10px;
+
+        background: #e2e8f0;
+
+        flex-shrink: 0;
+
+    }
+
+
+    .hotel-info {
+
+        min-width: 0;
+
+    }
+
+
+    .hotel-name {
+
+        font-size: 15px;
+
+        font-weight: 700;
+
+        margin-bottom: 5px;
+
+    }
+
+
+    .hotel-city {
+
+        font-size: 13px;
+
+        color: #64748b;
+
+        margin-bottom: 6px;
+
+    }
+
+
+    .hotel-description {
+
+        display: -webkit-box;
+
+        -webkit-line-clamp: 3;
+
+        -webkit-box-orient: vertical;
+
+        overflow: hidden;
+
+        font-size: 12px;
+
+        color: #64748b;
+
+        line-height: 1.4;
+
+    }
+
+
+    .hotel-section-title {
+
+        margin-top: 20px;
+
+        margin-bottom: 10px;
+
+        font-size: 15px;
+
+        font-weight: 700;
+
+    }
+
+
+    /* =====================================================
+       EMPTY STATES
+    ===================================================== */
+
+
+    .empty-state {
+
+        padding: 16px;
+
+        border-radius: 12px;
+
+        background: #f8fafc;
+
+        color: #64748b;
+
+        font-size: 14px;
+
+    }
+
+
+    /* =====================================================
+       MAP
+    ===================================================== */
+
+
+    #map {
+
+        flex: 1;
+
+        height: 100vh;
+
+    }
+
+
+    /* =====================================================
+       MAP MARKERS
+    ===================================================== */
+
+
+    .city-marker {
+
+        background: #2563eb;
+
+        border: 3px solid white;
+
+        border-radius: 50%;
+
+        width: 18px;
+
+        height: 18px;
+
+        box-shadow:
+            0 2px 6px
+            rgba(0, 0, 0, 0.3);
+
+    }
+
+
+    .hotel-marker {
+
+        background: #dc2626;
+
+        border: 3px solid white;
+
+        border-radius: 50%;
+
+        width: 18px;
+
+        height: 18px;
+
+        box-shadow:
+            0 2px 6px
+            rgba(0, 0, 0, 0.3);
+
+    }
+
+
+    @media (max-width: 850px) {
+
+        .page {
+
+            flex-direction: column;
+
+        }
+
+
+        .sidebar {
+
+            width: 100%;
+
+            height: 48vh;
+
+        }
+
+
+        #map {
+
+            height: 52vh;
+
+        }
+
+    }
+
+</style>
+
+
 </head>
+
 <body>
-  {% include 'nav.html' %}
-  
-  <div class="page-content">
-    <div class="card">
-      <h1>Your Trip Map</h1>
-      <p>Visual overview of your selected cities and hotels.</p>
-      
-      <div class="map-placeholder">
-        <h3>🗺️ Interactive Map</h3>
-        <p class="note">Map integration coming soon.<br>
-        Your chosen destinations will appear here.</p>
-      </div>
-      
-      <p style="margin-top: 30px; text-align: center;">
-        <a href="/accommodationSelection" style="margin-right: 16px;">← Back to Hotels</a>
-        <a href="/tripSummary">Go to Trip Summary →</a>
-      </p>
-    </div>
-  </div>
+
+<div class="page">
+
+
+<aside class="sidebar">
+
+
+    <h1>Your Trip</h1>
+
+
+    {% if selected_route %}
+
+
+        <!-- =================================================
+             ROUTE SUMMARY
+        ================================================= -->
+
+
+        <div class="route-summary">
+
+
+            <div class="route-name">
+
+                {{ selected_route.name }}
+
+            </div>
+
+
+            <div class="route-stats">
+
+
+                <span>
+
+                    {{ selected_route.distance }} km
+
+                </span>
+
+
+                <span>
+
+                    {{ selected_route.countries }}
+                    countries
+
+                </span>
+
+
+                <span>
+
+                    {{ selected_route.cities|length }}
+                    cities
+
+                </span>
+
+
+            </div>
+
+
+        </div>
+
+
+        <!-- =================================================
+             TRANSPORT
+        ================================================= -->
+
+
+        <h2>Travel connections</h2>
+
+
+        {% if selected_transport %}
+
+
+            <div class="transport-list">
+
+
+                {% for connection in selected_transport %}
+
+
+                    <div class="transport-card">
+
+
+                        <div class="transport-icon">
+
+
+                            {% if connection.mode == "Train" %}
+
+                                🚆
+
+
+                            {% elif connection.mode == "Bus" %}
+
+                                🚌
+
+
+                            {% elif connection.mode == "Flight" %}
+
+                                ✈️
+
+
+                            {% elif connection.mode == "Car" %}
+
+                                🚗
+
+
+                            {% else %}
+
+                                🧭
+
+
+                            {% endif %}
+
+
+                        </div>
+
+
+                        <div class="transport-content">
+
+
+                            <div class="transport-route">
+
+                                {{ connection.from }}
+
+                                →
+
+                                {{ connection.to }}
+
+                            </div>
+
+
+                            <div class="transport-times">
+
+
+                                <div class="time-block">
+
+
+                                    <span class="time">
+
+                                        {{ connection.departure_time }}
+
+                                    </span>
+
+
+                                    <span class="time-label">
+
+                                        Departure
+
+                                    </span>
+
+
+                                </div>
+
+
+                                <span class="time-arrow">
+
+                                    →
+
+                                </span>
+
+
+                                <div class="time-block">
+
+
+                                    <span class="time">
+
+                                        {{ connection.arrival_time }}
+
+                                    </span>
+
+
+                                    <span class="time-label">
+
+                                        Arrival
+
+                                    </span>
+
+
+                                </div>
+
+
+                            </div>
+
+
+                            <div class="transport-meta">
+
+
+                                <span class="badge">
+
+                                    {{ connection.mode }}
+
+                                </span>
+
+
+                                <span class="badge duration">
+
+                                    {{ connection.duration }}
+
+                                </span>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+        {% else %}
+
+
+            <div class="empty-state">
+
+                No travel connections selected.
+
+            </div>
+
+
+        {% endif %}
+
+
+        <!-- =================================================
+             HOTELS
+        ================================================= -->
+
+
+        <h2>Selected hotels</h2>
+
+
+        {% if selected_hotels %}
+
+
+            {% for city, hotels in selected_hotels.items() %}
+
+
+                <div class="hotel-section-title">
+
+                    {{ city }}
+
+                </div>
+
+
+                {% for hotel in hotels %}
+
+
+                    <div class="hotel-card">
+
+
+                        {% if hotel.image %}
+
+
+                            <img
+
+                                class="hotel-image"
+
+                                src="{{ hotel.image }}"
+
+                                alt="{{ hotel.name }}"
+
+                            >
+
+
+                        {% else %}
+
+
+                            <div
+
+                                class="hotel-image"
+
+                            ></div>
+
+
+                        {% endif %}
+
+
+                        <div class="hotel-info">
+
+
+                            <div class="hotel-name">
+
+                                {{ hotel.name }}
+
+                            </div>
+
+
+                            <div class="hotel-city">
+
+                                {{ hotel.country }}
+
+                            </div>
+
+
+                            {% if hotel.description %}
+
+
+                                <div
+
+                                    class="hotel-description"
+
+                                >
+
+                                    {{ hotel.description }}
+
+                                </div>
+
+
+                            {% endif %}
+
+
+                        </div>
+
+
+                    </div>
+
+
+                {% endfor %}
+
+
+            {% endfor %}
+
+
+        {% else %}
+
+
+            <div class="empty-state">
+
+                No hotels selected.
+
+            </div>
+
+
+        {% endif %}
+
+
+    {% else %}
+
+
+        <div class="empty-state">
+
+            No route has been selected yet.
+
+        </div>
+
+
+    {% endif %}
+
+
+</aside>
+
+
+<main id="map"></main>
+
+
+</div>
+
+<script
+
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+
+</script>
+
+<script>
+
+
+    const selectedRoute =
+
+        {{ selected_route | tojson }};
+
+
+    const selectedHotels =
+
+        {{ selected_hotels | tojson }};
+
+
+    const map =
+
+        L.map("map");
+
+
+    L.tileLayer(
+
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+        {
+
+            attribution:
+
+                "&copy; OpenStreetMap contributors"
+
+        }
+
+    ).addTo(map);
+
+
+    /* =========================================================
+       SELECTED ROUTE
+    ========================================================= */
+
+
+    if (
+
+        selectedRoute &&
+
+        selectedRoute.cities &&
+
+        selectedRoute.cities.length > 0
+
+    ) {
+
+
+        const cities =
+
+            selectedRoute.cities;
+
+
+        const coordinates =
+
+            cities.map(
+
+                city => [
+
+                    Number(city.latitude),
+
+                    Number(city.longitude)
+
+                ]
+
+            );
+
+
+        const routeLine =
+
+            L.polyline(
+
+                coordinates,
+
+                {
+
+                    color: "#2563eb",
+
+                    weight: 5,
+
+                    opacity: 0.85
+
+                }
+
+            ).addTo(map);
+
+
+        /* =====================================================
+           CITY MARKERS
+
+           Only cities from selectedRoute.cities are displayed.
+        ===================================================== */
+
+
+        cities.forEach(
+
+            (city, index) => {
+
+
+                const cityIcon =
+
+                    L.divIcon({
+
+                        className: "",
+
+                        html:
+
+                            '<div class="city-marker"></div>',
+
+                        iconSize: [
+
+                            18,
+
+                            18
+
+                        ],
+
+                        iconAnchor: [
+
+                            9,
+
+                            9
+
+                        ]
+
+                    });
+
+
+                const marker =
+
+                    L.marker(
+
+                        [
+
+                            Number(city.latitude),
+
+                            Number(city.longitude)
+
+                        ],
+
+                        {
+
+                            icon: cityIcon
+
+                        }
+
+                    ).addTo(map);
+
+
+                marker.bindPopup(`
+
+                    <strong>
+
+                        ${index + 1}.
+                        ${city.name}
+
+                    </strong>
+
+                    <br>
+
+                    ${city.country}
+
+                `);
+
+
+            }
+
+        );
+
+
+        /* =====================================================
+           HOTEL MARKERS
+
+           Only selected hotels belonging to route cities
+           receive red pins.
+        ===================================================== */
+
+
+        const routeCityNames =
+
+            new Set(
+
+                cities.map(
+
+                    city => city.name
+
+                )
+
+            );
+
+
+        Object.entries(
+
+            selectedHotels || {}
+
+        ).forEach(
+
+            ([cityName, hotels]) => {
+
+
+                if (
+
+                    !routeCityNames.has(
+
+                        cityName
+
+                    )
+
+                ) {
+
+                    return;
+
+                }
+
+
+                hotels.forEach(
+
+                    hotel => {
+
+
+                        if (
+
+                            hotel.latitude == null ||
+
+                            hotel.longitude == null
+
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        const hotelIcon =
+
+                            L.divIcon({
+
+                                className: "",
+
+                                html:
+
+                                    '<div class="hotel-marker"></div>',
+
+                                iconSize: [
+
+                                    18,
+
+                                    18
+
+                                ],
+
+                                iconAnchor: [
+
+                                    9,
+
+                                    9
+
+                                ]
+
+                            });
+
+
+                        const hotelMarker =
+
+                            L.marker(
+
+                                [
+
+                                    Number(
+
+                                        hotel.latitude
+
+                                    ),
+
+                                    Number(
+
+                                        hotel.longitude
+
+                                    )
+
+                                ],
+
+                                {
+
+                                    icon: hotelIcon
+
+                                }
+
+                            ).addTo(map);
+
+
+                        hotelMarker.bindPopup(`
+
+                            <strong>
+
+                                ${hotel.name}
+
+                            </strong>
+
+                            <br>
+
+                            ${cityName}
+
+                            <br>
+
+                            <small>
+
+                                Selected hotel
+
+                            </small>
+
+                        `);
+
+
+                    }
+
+                );
+
+
+            }
+
+        );
+
+
+        /* =====================================================
+           FIT MAP TO SELECTED ROUTE
+        ===================================================== */
+
+
+        map.fitBounds(
+
+            routeLine.getBounds(),
+
+            {
+
+                padding: [
+
+                    50,
+
+                    50
+
+                ]
+
+            }
+
+        );
+
+
+    } else {
+
+
+        map.setView(
+
+            [
+
+                48.1351,
+
+                11.5820
+
+            ],
+
+            5
+
+        );
+
+    }
+
+
+</script>
+
 </body>
+
 </html>
