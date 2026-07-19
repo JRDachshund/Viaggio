@@ -33,3 +33,4 @@
 - [x] GIT
 - [x] Benutzeroberfläche
 - [x] Karte
+- [x] Skip this step (countries, cities, hotels)
