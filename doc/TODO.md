@@ -12,6 +12,8 @@
 - [ ] Redesign Website
 - [ ] Reihenfolge (Ranking) der Reiseziele
 - [ ] Remove My Trip/View Trip
+  - [ ] **Team decision:** Is `/map` (“Your Trip”) the trip overview, or do we want a separate trip overview page?
+    - Context: `/tripSummary` + nav “My Trip” / “View Trip” existed, then were removed in cleanup (`ad84535`); map absorbed much of that role. Confirm before rebuilding.
 
 ## Done
 
