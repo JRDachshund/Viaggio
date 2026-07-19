@@ -2,18 +2,16 @@
 
 ## To do
 
-- [ ] Karte
-- [ ] Reihenfolge (Ranking) der Reiseziele
 - [ ] Buchen
 - [ ] Umgebungsfotos
-- [ ] Automatiziertes Walkthrough
-- [ ] Remove My Trip/View Trip
+- [ ] Automatisiertes Walkthrough
 - [ ] City/Hotel Battles (Vergleiche zwei Städte/Hotels)
 
 ## In Bearbeitung
 
 - [ ] Redesign Website
-- [ ] API für Transportinformationen
+- [ ] Reihenfolge (Ranking) der Reiseziele
+- [ ] Remove My Trip/View Trip
 
 ## Done
 
@@ -22,6 +20,7 @@
 - [x] Aufgabenverteilung
 - [x] Set up Flask
 - [x] API für Hotelinformationen
+- [x] API für Transportinformationen
 - [x] IDE klären
 - [x] Aufrufen
 - [x] Navigieren
@@ -31,3 +30,4 @@
 - [x] GUI
 - [x] GIT
 - [x] Benutzeroberfläche
+- [x] Karte
