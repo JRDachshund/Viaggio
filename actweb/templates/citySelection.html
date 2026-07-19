@@ -186,37 +186,31 @@
 
 <div class="card-stack" id="card-stack">
 
-{% set first = true %}
-{% for country, city_list in cities.items() %}
-    {% for city in city_list %}
+{% for city in cities %}
 
-    <div
-        class="swipe-card {% if first %}active{% endif %}"
-        data-name="{{ city.name }}"
-        data-code="{{ city.code }}"
-        data-country="{{ city.country }}"
-        data-latitude="{{ city.latitude }}"
-        data-longitude="{{ city.longitude }}"
-    >
+<div
+    class="swipe-card {% if loop.first %}active{% endif %}"
+    data-name="{{ city.name }}"
+    data-code="{{ city.code }}"
+    data-country="{{ city.country }}"
+    data-latitude="{{ city.latitude }}"
+    data-longitude="{{ city.longitude }}"
+>
+    <div class="card-content">
 
-        <div class="card-content">
+        <h2>{{ city.name }}</h2>
 
-            <h2>{{ city.name }}</h2>
+        <div class="city-code">
+            {{ city.code }}
+        </div>
 
-            <div class="city-code">
-                {{ city.code }}
-            </div>
-
-            <div class="city-country">
-                {{ city.country }}
-            </div>
-
+        <div class="city-country">
+            {{ city.country }}
         </div>
 
     </div>
+</div>
 
-    {% set first = false %}
-    {% endfor %}
 {% endfor %}
 
 </div>

@@ -136,21 +136,24 @@ def rejectCountry():
 @alt.route("/citySelection")
 def citySelection():
 
-    country_name_to_code = {value: key for key, value in COUNTRY_CODE_TO_NAME.items()}
+    country_name_to_code = {
+        value: key
+        for key, value in COUNTRY_CODE_TO_NAME.items()
+    }
 
-    available_cities = {}
+    available_cities = []
 
     for country in selected_countries:
 
         code = country_name_to_code.get(country)
 
         if code and code in CITY_LIBRARY:
+            available_cities.extend(CITY_LIBRARY[code])
 
-            available_cities[country] = CITY_LIBRARY[code]
-            print("!")
-            print(CITY_LIBRARY[code])
-
-    return render_template("citySelection.html", cities=available_cities)
+    return render_template(
+        "citySelection.html",
+        cities=available_cities
+    )
 
 
 @alt.route("/saveCities", methods=["POST"])
@@ -200,10 +203,6 @@ def get_headers():
 
 def search_hotels(destination_code):
 
-    # For debugging:
-    #print("!!!!!!")
-    #print(destination_code)
-
     # generates body for hotelbeds API request
     body = {
         "stay": {
@@ -223,15 +222,16 @@ def search_hotels(destination_code):
     }
 
     # sends request to the hotelbeds API and receives an answer
+    # This particular URL only gives you availability info of certain hotels, not images, descriptions, etc.
     response = requests.post(
         HOTEL_SEARCH_URL,
         json=body,
         headers=get_headers()
     )
 
-    #for debugging
-    print(response.status_code)
-    print(response.text)
+    # for debugging
+    #print(response.status_code)
+    #print(response.text)
 
     # get request status, especially relevant if an error occurs (e.g. 403)
     response.raise_for_status()
@@ -244,24 +244,33 @@ def get_hotels_content(hotel_codes):
 
     hotels_dict = {}
 
+    # We reduce the batch size to 50 as our API only allows us to make 50 requests at a time
     batch_size = 50
 
+    # We loop through all the hotel codes in steps of 50 (batch_size)
     for i in range(0, len(hotel_codes), batch_size):
 
+        # In one batch we include the partial list of all the codes from index i to i+batch_size
+        # So in the first iteration this could be from 0 to 50
         batch = hotel_codes[i:i + batch_size]
+
+        # We convert each hotel code in the batch to a String and then join them all together into a list (by comma)
         codes_string = ",".join(str(code) for code in batch)
 
+        # These are the parameters we send hotelbeds
         params = {
             "codes": codes_string,
             "language": "ENG"
         }
 
+        # We send the request and receive the answer
         response = requests.get(
             HOTEL_CONTENT_URL,
             headers=get_headers(),
             params=params
         )
 
+        # Get the status of the request (e.g. 403), good to have in case of an error since it then stops the code
         response.raise_for_status()
 
         data = response.json()
@@ -522,7 +531,7 @@ def count_countries(route):
 
 
 def generate_routes(selected_cities):
-    print(selected_cities)
+    #print(selected_cities)
     cities = [city for city in selected_cities if city.get("latitude") is not None and city.get("longitude") is not None]
     
     if len(cities) < 2:
@@ -779,10 +788,10 @@ def confirmTransport():
 @alt.route("/map")
 def map():
 
-    # Create a display-ready copy of the selected transport
+    # Variable for saving the entire transport options after being modified to be more easily displayed
     display_transport = []
 
-
+    # loop through every journey
     for connection in selected_transport:
 
 
