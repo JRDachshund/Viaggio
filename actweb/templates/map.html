@@ -220,13 +220,49 @@
 
         flex: 1;
 
-        padding: 14px;
-
         border: 1px solid #e2e8f0;
 
         border-radius: 14px;
 
         background: white;
+
+        overflow: hidden;
+
+    }
+
+
+    /* =====================================================
+       CLICKABLE TRANSPORT SUMMARY
+    ===================================================== */
+
+
+    .transport-summary {
+
+        padding: 14px;
+
+        cursor: pointer;
+
+        transition: background 0.2s ease;
+
+    }
+
+
+    .transport-summary:hover {
+
+        background: #f8fafc;
+
+    }
+
+
+    .transport-summary-header {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 10px;
 
     }
 
@@ -238,6 +274,26 @@
         font-weight: 700;
 
         margin-bottom: 10px;
+
+    }
+
+
+    .expand-icon {
+
+        flex-shrink: 0;
+
+        font-size: 14px;
+
+        color: #64748b;
+
+        transition: transform 0.2s ease;
+
+    }
+
+
+    .transport-card.expanded .expand-icon {
+
+        transform: rotate(180deg);
 
     }
 
@@ -332,6 +388,157 @@
         background: #f1f5f9;
 
         color: #475569;
+
+    }
+
+
+    /* =====================================================
+       JOURNEY LEGS
+    ===================================================== */
+
+
+    .transport-legs {
+
+        display: none;
+
+        padding: 0 14px 14px;
+
+        border-top: 1px solid #e2e8f0;
+
+        background: #fafafa;
+
+    }
+
+
+    .transport-card.expanded .transport-legs {
+
+        display: block;
+
+    }
+
+
+    .legs-title {
+
+        padding-top: 14px;
+
+        padding-bottom: 10px;
+
+        font-size: 13px;
+
+        font-weight: 700;
+
+        color: #475569;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.5px;
+
+    }
+
+
+    .journey-leg {
+
+        position: relative;
+
+        display: flex;
+
+        gap: 12px;
+
+        padding: 12px 0;
+
+    }
+
+
+    .journey-leg:not(:last-child)::after {
+
+        content: "";
+
+        position: absolute;
+
+        left: 15px;
+
+        top: 42px;
+
+        bottom: -12px;
+
+        width: 2px;
+
+        background: #cbd5e1;
+
+    }
+
+
+    .leg-number {
+
+        position: relative;
+
+        z-index: 1;
+
+        flex-shrink: 0;
+
+        width: 30px;
+
+        height: 30px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        color: white;
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+    }
+
+
+    .leg-details {
+
+        min-width: 0;
+
+        padding-top: 2px;
+
+    }
+
+
+    .leg-mode {
+
+        margin-bottom: 4px;
+
+        font-size: 13px;
+
+        font-weight: 700;
+
+        color: #1e293b;
+
+    }
+
+
+    .leg-route {
+
+        font-size: 12px;
+
+        line-height: 1.5;
+
+        color: #64748b;
+
+        word-break: break-word;
+
+    }
+
+
+    .leg-arrow {
+
+        margin: 0 4px;
+
+        color: #94a3b8;
 
     }
 
@@ -547,7 +754,9 @@
 </head>
 
 <body>
-  {% include 'nav.html' %}
+
+{% include 'nav.html' %}
+
 
 <div class="page">
 
@@ -665,33 +874,137 @@
                         <div class="transport-content">
 
 
-                            <div class="transport-route">
-
-                                {{ connection.from }}
-
-                                →
-
-                                {{ connection.to }}
-
-                            </div>
+                            <!-- =================================
+                                 CLICKABLE TRANSPORT SUMMARY
+                            ================================== -->
 
 
-                            <div class="transport-times">
+                            <div
+                                class="transport-summary"
+                                onclick="toggleTransport(this)"
+                            >
 
 
-                                <div class="time-block">
+                                <div
+                                    class="transport-summary-header"
+                                >
 
 
-                                    <span class="time">
+                                    <div
+                                        class="transport-route"
+                                    >
 
-                                        {{ connection.departure_time }}
+                                        {{ connection.from }}
+
+                                        →
+
+                                        {{ connection.to }}
+
+                                    </div>
+
+
+                                    <div
+                                        class="expand-icon"
+                                    >
+
+                                        ▼
+
+                                    </div>
+
+
+                                </div>
+
+
+                                <div class="transport-times">
+
+
+                                    <div
+                                        class="time-block"
+                                    >
+
+
+                                        <span
+                                            class="time"
+                                        >
+
+                                            {{
+                                                connection.departure_time
+                                            }}
+
+                                        </span>
+
+
+                                        <span
+                                            class="time-label"
+                                        >
+
+                                            Departure
+
+                                        </span>
+
+
+                                    </div>
+
+
+                                    <span
+                                        class="time-arrow"
+                                    >
+
+                                        →
 
                                     </span>
 
 
-                                    <span class="time-label">
+                                    <div
+                                        class="time-block"
+                                    >
 
-                                        Departure
+
+                                        <span
+                                            class="time"
+                                        >
+
+                                            {{
+                                                connection.arrival_time
+                                            }}
+
+                                        </span>
+
+
+                                        <span
+                                            class="time-label"
+                                        >
+
+                                            Arrival
+
+                                        </span>
+
+
+                                    </div>
+
+
+                                </div>
+
+
+                                <div
+                                    class="transport-meta"
+                                >
+
+
+                                    <span
+                                        class="badge"
+                                    >
+
+                                        {{ connection.mode }}
+
+                                    </span>
+
+
+                                    <span
+                                        class="badge duration"
+                                    >
+
+                                        {{ connection.duration }}
 
                                     </span>
 
@@ -699,54 +1012,141 @@
                                 </div>
 
 
-                                <span class="time-arrow">
-
-                                    →
-
-                                </span>
+                            </div>
 
 
-                                <div class="time-block">
+                            <!-- =================================
+                                 FLEXIBLE JOURNEY LEGS
+                            ================================== -->
 
 
-                                    <span class="time">
-
-                                        {{ connection.arrival_time }}
-
-                                    </span>
+                            {% if connection.legs %}
 
 
-                                    <span class="time-label">
+                                <div
+                                    class="transport-legs"
+                                >
 
-                                        Arrival
 
-                                    </span>
+                                    <div
+                                        class="legs-title"
+                                    >
+
+                                        Journey details
+
+                                    </div>
+
+
+                                    {% for leg in connection.legs %}
+
+
+                                        <div
+                                            class="journey-leg"
+                                        >
+
+
+                                            <div
+                                                class="leg-number"
+                                            >
+
+                                                {{
+                                                    loop.index
+                                                }}
+
+                                            </div>
+
+
+                                            <div
+                                                class="leg-details"
+                                            >
+
+
+                                                <div
+                                                    class="leg-mode"
+                                                >
+
+                                                    {% if leg[0] == "HIGHSPEED_RAIL" %}
+
+                                                        🚄 High-speed rail
+
+
+                                                    {% elif leg[0] == "RAIL" %}
+
+                                                        🚆 Train
+
+
+                                                    {% elif leg[0] == "WALK" %}
+
+                                                        🚶 Walking
+
+
+                                                    {% elif leg[0] == "BUS" %}
+
+                                                        🚌 Bus
+
+
+                                                    {% elif leg[0] == "SUBWAY" %}
+
+                                                        🚇 Subway
+
+
+                                                    {% elif leg[0] == "TRAM" %}
+
+                                                        🚊 Tram
+
+
+                                                    {% elif leg[0] == "FLIGHT" %}
+
+                                                        ✈️ Flight
+
+
+                                                    {% elif leg[0] == "CAR" %}
+
+                                                        🚗 Car
+
+
+                                                    {% else %}
+
+                                                        🧭
+                                                        {{ leg[0] }}
+
+                                                    {% endif %}
+
+                                                </div>
+
+
+                                                <div
+                                                    class="leg-route"
+                                                >
+
+                                                    {{ leg[1] }}
+
+                                                    <span
+                                                        class="leg-arrow"
+                                                    >
+
+                                                        →
+
+                                                    </span>
+
+                                                    {{ leg[2] }}
+
+                                                </div>
+
+
+                                            </div>
+
+
+                                        </div>
+
+
+                                    {% endfor %}
 
 
                                 </div>
 
 
-                            </div>
-
-
-                            <div class="transport-meta">
-
-
-                                <span class="badge">
-
-                                    {{ connection.mode }}
-
-                                </span>
-
-
-                                <span class="badge duration">
-
-                                    {{ connection.duration }}
-
-                                </span>
-
-
-                            </div>
+                            {% endif %}
 
 
                         </div>
@@ -788,7 +1188,9 @@
             {% for city, hotels in selected_hotels.items() %}
 
 
-                <div class="hotel-section-title">
+                <div
+                    class="hotel-section-title"
+                >
 
                     {{ city }}
 
@@ -798,7 +1200,9 @@
                 {% for hotel in hotels %}
 
 
-                    <div class="hotel-card">
+                    <div
+                        class="hotel-card"
+                    >
 
 
                         {% if hotel.image %}
@@ -828,17 +1232,23 @@
                         {% endif %}
 
 
-                        <div class="hotel-info">
+                        <div
+                            class="hotel-info"
+                        >
 
 
-                            <div class="hotel-name">
+                            <div
+                                class="hotel-name"
+                            >
 
                                 {{ hotel.name }}
 
                             </div>
 
 
-                            <div class="hotel-city">
+                            <div
+                                class="hotel-city"
+                            >
 
                                 {{ hotel.country }}
 
@@ -877,7 +1287,9 @@
         {% else %}
 
 
-            <div class="empty-state">
+            <div
+                class="empty-state"
+            >
 
                 No hotels selected.
 
@@ -890,7 +1302,9 @@
     {% else %}
 
 
-        <div class="empty-state">
+        <div
+            class="empty-state"
+        >
 
             No route has been selected yet.
 
@@ -908,13 +1322,47 @@
 
 </div>
 
+
 <script
 
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 
 </script>
 
+
 <script>
+
+
+    /* =========================================================
+       TRANSPORT CARD EXPANSION
+    ========================================================= */
+
+
+    function toggleTransport(summary) {
+
+
+        const card =
+
+            summary.closest(
+
+                ".transport-card"
+
+            );
+
+
+        card.classList.toggle(
+
+            "expanded"
+
+        );
+
+
+    }
+
+
+    /* =========================================================
+       DATA FROM FLASK / JINJA
+    ========================================================= */
 
 
     const selectedRoute =
@@ -925,6 +1373,11 @@
     const selectedHotels =
 
         {{ selected_hotels | tojson }};
+
+
+    /* =========================================================
+       MAP INITIALIZATION
+    ========================================================= */
 
 
     const map =
@@ -1004,8 +1457,6 @@
 
         /* =====================================================
            CITY MARKERS
-
-           Only cities from selectedRoute.cities are displayed.
         ===================================================== */
 
 
@@ -1069,6 +1520,7 @@
                     <strong>
 
                         ${index + 1}.
+
                         ${city.name}
 
                     </strong>
@@ -1087,9 +1539,6 @@
 
         /* =====================================================
            HOTEL MARKERS
-
-           Only selected hotels belonging to route cities
-           receive red pins.
         ===================================================== */
 
 
@@ -1284,6 +1733,7 @@
 
 
 </script>
+
 
 </body>
 
