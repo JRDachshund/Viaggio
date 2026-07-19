@@ -162,6 +162,29 @@
     background: #6b21a8;
   }
 
+  .skip-step {
+    display: block;
+    text-align: center;
+    margin-top: 18px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #64748b;
+    text-decoration: none;
+    transition: color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .skip-step:hover {
+    color: #7c3aed;
+    text-decoration: underline;
+  }
+
+  .skip-step.is-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    cursor: not-allowed;
+    text-decoration: none;
+  }
+
   .swipe-card.active {
     display: flex;
 }
@@ -219,6 +242,8 @@
     <button class="action-btn btn-yes" id="btn-yes" title="Add this city to trip">Add →</button>
   </div>
 
+  <a href="#" id="skip-step" class="skip-step is-disabled" aria-disabled="true">Skip this step →</a>
+
   <!-- Completion state -->
   <div id="done-state" style="display: none; margin-top: 32px;">
     <div style="max-width: 380px; margin: 0 auto; padding: 32px 24px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);">
@@ -244,6 +269,8 @@ const btnNo = document.getElementById("btn-no");
 
 const continueBtn = document.getElementById("continue-btn");
 
+const skipStep = document.getElementById("skip-step");
+
 let current = 0;
 
 let selectedCities = [];
@@ -255,6 +282,14 @@ function updateProgress() {
 
 }
 
+function updateSkipStepLink() {
+    if (!skipStep) return;
+
+    const canSkip = selectedCities.length >= 1;
+    skipStep.classList.toggle("is-disabled", !canSkip);
+    skipStep.setAttribute("aria-disabled", canSkip ? "false" : "true");
+}
+
 function showCard() {
 
     cards.forEach(card => card.classList.remove("active"));
@@ -264,6 +299,8 @@ function showCard() {
         stack.style.display = "none";
 
         document.querySelector(".actions").style.display = "none";
+
+        if (skipStep) skipStep.style.display = "none";
 
         progress.style.display = "none";
 
@@ -287,6 +324,28 @@ function nextCard() {
 
 }
 
+async function saveCitiesAndContinue(e) {
+    if (e) e.preventDefault();
+
+    if (selectedCities.length < 1) return;
+
+    await fetch("/saveCities", {
+
+        method: "POST",
+
+        headers: {
+
+            "Content-Type": "application/json"
+
+        },
+
+        body: JSON.stringify(selectedCities)
+
+    });
+
+    window.location.href = "/routeSelection";
+}
+
 btnYes.onclick = () => {
 
     const card = cards[current];
@@ -305,6 +364,7 @@ btnYes.onclick = () => {
 
     });
 
+    updateSkipStepLink();
     nextCard();
 
 };
@@ -315,29 +375,14 @@ btnNo.onclick = () => {
 
 };
 
-continueBtn.onclick = async (e) => {
+continueBtn.onclick = saveCitiesAndContinue;
 
-    e.preventDefault();
-
-    await fetch("/saveCities", {
-
-        method: "POST",
-
-        headers: {
-
-            "Content-Type": "application/json"
-
-        },
-
-        body: JSON.stringify(selectedCities)
-
-    });
-
-    window.location.href = "/routeSelection";
-
-};
+if (skipStep) {
+    skipStep.onclick = saveCitiesAndContinue;
+}
 
 updateProgress();
+updateSkipStepLink();
 
 </script>
 

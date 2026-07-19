@@ -194,6 +194,29 @@
     background: #6b21a8;
   }
 
+  .skip-step {
+    display: block;
+    text-align: center;
+    margin-top: 18px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #64748b;
+    text-decoration: none;
+    transition: color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .skip-step:hover {
+    color: #7c3aed;
+    text-decoration: underline;
+  }
+
+  .skip-step.is-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    cursor: not-allowed;
+    text-decoration: none;
+  }
+
 </style>
 </head>
 <body>
@@ -230,6 +253,8 @@
     <button class="action-btn btn-yes" id="btn-yes" title="Add this country to trip">Yes →</button>
   </div>
 
+  <a href="/citySelection" id="skip-step" class="skip-step is-disabled" aria-disabled="true">Skip this step →</a>
+
   <!-- Completion state -->
   <div id="done-state" style="display: none; margin-top: 32px;">
     <div class="done-state">
@@ -244,15 +269,27 @@
 <script>
 let totalCards = 0;
 let decidedCount = 0;
+let acceptedCount = 0;
 
 function updateProgress() {
   const progressEl = document.getElementById('progress');
   progressEl.textContent = `${decidedCount} / ${totalCards} decided`;
 }
 
+function updateSkipStepLink() {
+  const skipLink = document.getElementById('skip-step');
+  if (!skipLink) return;
+
+  const canSkip = acceptedCount >= 1;
+  skipLink.classList.toggle('is-disabled', !canSkip);
+  skipLink.setAttribute('aria-disabled', canSkip ? 'false' : 'true');
+}
+
 function showDoneState() {
   document.getElementById('card-stack').style.display = 'none';
   document.querySelector('.actions').style.display = 'none';
+  const skipLink = document.getElementById('skip-step');
+  if (skipLink) skipLink.style.display = 'none';
   document.getElementById('done-state').style.display = 'block';
 }
 
@@ -270,6 +307,10 @@ async function decideCountry(country, accepted) {
   }
 
   decidedCount++;
+  if (accepted) {
+    acceptedCount++;
+    updateSkipStepLink();
+  }
   updateProgress();
 
   // Remove the card from the DOM
@@ -329,6 +370,16 @@ function initSwiper() {
   }
 
   updateProgress();
+  updateSkipStepLink();
+
+  const skipLink = document.getElementById('skip-step');
+  if (skipLink) {
+    skipLink.addEventListener('click', (e) => {
+      if (acceptedCount < 1) {
+        e.preventDefault();
+      }
+    });
+  }
 
   // Left button = No / Skip
   document.getElementById('btn-no').addEventListener('click', () => {
