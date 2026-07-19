@@ -281,6 +281,183 @@ def get_hotels_content(hotel_codes):
     return hotels_dict
 
 
+# Hotelbeds facility codes -> human-readable amenity labels (common set)
+FACILITY_LABELS = {
+    10: "Restaurant",
+    20: "Bar",
+    30: "Cafe",
+    40: "24h reception",
+    50: "Safe",
+    55: "Elevator",
+    60: "Currency exchange",
+    70: "Shop",
+    80: "Garden",
+    90: "Terrace",
+    95: "Wheelchair access",
+    100: "Room service",
+    120: "Laundry",
+    130: "Medical service",
+    135: "Bike hire",
+    160: "Car park",
+    170: "Garage",
+    200: "WiFi",
+    220: "Air conditioning",
+    250: "Heating",
+    260: "TV",
+    270: "Hairdryer",
+    280: "Minibar",
+    287: "Fridge",
+    295: "Kitchen",
+    300: "Bath",
+    310: "Shower",
+    320: "Bathtub",
+    330: "Jacuzzi",
+    340: "Sauna",
+    350: "Solarium",
+    360: "Massage",
+    365: "Spa",
+    370: "Gym",
+    390: "Pool",
+    400: "Indoor pool",
+    410: "Outdoor pool",
+    420: "Children's pool",
+    470: "Beach",
+    490: "Tennis",
+    500: "Golf",
+    550: "Kids club",
+    560: "Playground",
+    575: "Babysitting",
+    620: "Business centre",
+    630: "Meeting rooms",
+    640: "Banquet hall",
+    670: "Concierge",
+    730: "Pet friendly",
+    740: "Non-smoking rooms",
+    770: "Smoking rooms",
+    850: "Airport shuttle",
+    870: "Transfer service",
+    895: "EV charging",
+    995: "Electric kettle",
+}
+
+
+def hotelbeds_text(value, fallback=""):
+    """Extract display text from Hotelbeds string or {content: ...} objects."""
+    if value is None:
+        return fallback
+    if isinstance(value, dict):
+        if value.get("content"):
+            return str(value["content"])
+        desc = value.get("description")
+        if isinstance(desc, dict) and desc.get("content"):
+            return str(desc["content"])
+        if desc:
+            return str(desc)
+        return fallback
+    text = str(value).strip()
+    return text if text else fallback
+
+
+def hotel_image_url(path):
+    if not path:
+        return ""
+    path = str(path)
+    if path.startswith("http"):
+        return path
+    return f"http://photos.hotelbeds.com/giata/{path}"
+
+
+def normalize_hotel_images(images, limit=8):
+    urls = []
+    for image in images or []:
+        path = image.get("path") if isinstance(image, dict) else None
+        url = hotel_image_url(path)
+        if url and url not in urls:
+            urls.append(url)
+        if len(urls) >= limit:
+            break
+    return urls
+
+
+def extract_hotel_stars(content, search_hotel):
+    """Best-effort star/category label from content or search payload."""
+    for key in ("categoryName", "categoryCode"):
+        label = hotelbeds_text(content.get(key) or search_hotel.get(key))
+        if label:
+            # e.g. "4EST" -> "4 stars" when it looks like a star code
+            if label.endswith("EST") and label[0].isdigit():
+                return f"{label[0]} stars"
+            return label
+
+    category = content.get("category") or search_hotel.get("category")
+    if isinstance(category, dict):
+        label = hotelbeds_text(category.get("description") or category.get("name") or category)
+        if label:
+            return label
+        code = category.get("code")
+        if code and str(code)[0:1].isdigit():
+            return f"{str(code)[0]} stars"
+    elif category:
+        return str(category)
+
+    for key in ("stars", "ranking", "S2C"):
+        value = content.get(key) or search_hotel.get(key)
+        if value is not None and value != "":
+            try:
+                n = int(float(value))
+                if 1 <= n <= 5:
+                    return f"{n} stars"
+            except (TypeError, ValueError):
+                return str(value)
+
+    return None
+
+
+def extract_hotel_price(search_hotel):
+    """Lowest rate + currency from availability search, if present."""
+    rate = search_hotel.get("minRate") or search_hotel.get("minRateFrom")
+    if rate is None or rate == "":
+        return None, None
+
+    currency = search_hotel.get("currency") or "EUR"
+    try:
+        amount = float(rate)
+        # Show whole euros when clean, otherwise one decimal
+        if amount == int(amount):
+            amount_str = str(int(amount))
+        else:
+            amount_str = f"{amount:.1f}"
+    except (TypeError, ValueError):
+        amount_str = str(rate)
+
+    return amount_str, currency
+
+
+def map_amenities(facilities, limit=6):
+    labels = []
+    seen = set()
+    for facility in facilities or []:
+        code = facility.get("facilityCode") if isinstance(facility, dict) else facility
+        try:
+            code = int(code)
+        except (TypeError, ValueError):
+            continue
+        label = FACILITY_LABELS.get(code)
+        if label and label not in seen:
+            seen.add(label)
+            labels.append(label)
+        if len(labels) >= limit:
+            break
+    return labels
+
+
+def truncate_description(text, max_len=160):
+    text = (text or "").strip()
+    if len(text) <= max_len:
+        return text
+    cut = text[: max_len - 1].rsplit(" ", 1)[0]
+    return (cut or text[: max_len - 1]) + "…"
+
 
 # hotel selection
 @alt.route("/accommodationSelection")
@@ -333,63 +510,44 @@ def home():
         if str(code) in rejected_hotels:
             continue
 
-        content = content_hotels.get(code,{})
+        content = content_hotels.get(code, {})
 
-        images = content.get(
-            "images",
-            []
-        )
+        image_urls = normalize_hotel_images(content.get("images", []))
 
-        if not images:
-
+        if not image_urls:
             continue
 
+        name = hotelbeds_text(content.get("name"), hotelbeds_text(hotel.get("name"), "Hotel"))
+        description = hotelbeds_text(content.get("description"), "")
+        city = hotelbeds_text(
+            content.get("city"),
+            hotelbeds_text(hotel.get("destinationName"), hotelbeds_text(hotel.get("city"), ""))
+        )
+        country = hotelbeds_text(content.get("country"), hotelbeds_text(hotel.get("country"), ""))
+
+        min_rate, currency = extract_hotel_price(hotel)
+        stars_label = extract_hotel_stars(content, hotel)
+        amenities = map_amenities(content.get("facilities", []))
+
+        coords = content.get("coordinates") or {}
+        latitude = content.get("latitude") or coords.get("latitude") or hotel.get("latitude")
+        longitude = content.get("longitude") or coords.get("longitude") or hotel.get("longitude")
+
         enriched_hotels.append({
-
             "code": str(code),
-
-            "name": content.get(
-                "name",
-                hotel.get("name")
-            ),
-
-            "description": content.get(
-                "description",
-                {}
-            ).get(
-                "content",
-                ""
-            ),
-
-            "city": content.get(
-                "city",
-                {}
-            ).get(
-                "content",
-                hotel.get("city", "")
-            ),
-
-            "country": content.get(
-                "country",
-                {}
-            ).get(
-                "description",
-                {}
-            ).get(
-                "content",
-                hotel.get(
-                    "country",
-                    "Demo"
-                )
-            ),
-
-            "latitude": (content.get("latitude") or content.get("coordinates",{}).get("latitude")),
-
-            "longitude": (content.get("longitude") or content.get("coordinates",{}).get("longitude")),
-
-            "images": images,
-
-            "facilities": content.get("facilities",[])
+            "name": name,
+            "description": description,
+            "short_description": truncate_description(description),
+            "city": city,
+            "country": country,
+            "latitude": latitude,
+            "longitude": longitude,
+            "images": image_urls,
+            "image": image_urls[0],
+            "min_rate": min_rate,
+            "currency": currency,
+            "stars_label": stars_label,
+            "amenities": amenities,
         })
 
     return render_template("accommodationSelection.html", hotels=enriched_hotels, error=None)
